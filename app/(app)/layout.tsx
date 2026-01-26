@@ -1,4 +1,6 @@
-import { AppSidebar } from "@/components/ui/app-sidebar";
+
+import AppSidebar from "@/components/app-sidebar";
+import Navigation from "@/components/navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AuthProvider from "@/Providers/AuthProvider";
 import { cookies } from "next/headers";
@@ -15,9 +17,10 @@ export default async function Layout({
       {" "}
       <SidebarProvider defaultOpen={defaultOpen}>
         <AppSidebar />
-        <main className="flex flex-1 flex-col overflow-auto bg-[#F4F4F4] dark:bg-primary-foreground">
+        <main className="flex flex-1 flex-col overflow-auto">
           <Navigation />
           {children}
+          
         </main>
       </SidebarProvider>
     </AuthProvider>

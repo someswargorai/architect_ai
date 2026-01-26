@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import Image from 'next/image';
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import Image from "next/image";
 
 interface HeroProps {
   onStart?: () => void;
@@ -10,16 +10,16 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ onStart }) => {
   const containerRef = useRef<HTMLElement>(null);
-  
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start end", "end start"]
+    offset: ["start end", "end start"],
   });
 
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
 
   const y = useTransform(smoothProgress, [0, 0.5], [100, -50]);
@@ -30,16 +30,16 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
   return (
     <section
       ref={containerRef}
-      className="relative pt-32 pb-40 px-6 overflow-hidden grid-bg"
+      className="relative pt-32 pb-40 px-6 overflow-hidden bg-[#050505]"
     >
       <div className="max-w-7xl mx-auto text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-6"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold mb-6"
         >
-          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           NEW: AI-POWERED AUTO-DIAGRAMMING
         </motion.div>
 
@@ -47,10 +47,10 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+          className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tighter"
         >
           System Design at the <br />
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-amber-500">
             Speed of Thought
           </span>
         </motion.h1>
@@ -59,7 +59,7 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-2xl mx-auto text-gray-400 text-lg md:text-xl mb-10"
+          className="max-w-2xl mx-auto text-zinc-500 text-lg md:text-xl mb-10 font-medium"
         >
           The collaborative canvas where AI helps you architect complex systems,
           generate technical docs, and map cloud infrastructure in seconds.
@@ -73,11 +73,11 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
         >
           <button
             onClick={onStart}
-            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black rounded-sm  text-xs shadow-[0_10px_30px_rgba(245,158,11,0.2)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
           >
-            Create Your First Diagram
+            Launch Architect
           </button>
-          <button className="w-full sm:w-auto px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-md font-bold text-sm transition-all cursor-pointer">
+          <button className="w-full sm:w-auto px-8 py-4 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-300 border border-white/5 rounded-sm text-xs transition-all cursor-pointer">
             Watch Demo
           </button>
         </motion.div>
@@ -93,45 +93,44 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
             }}
             className="relative group max-w-5xl mx-auto"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
-            <div className="relative glass rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10">
+            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-amber-700 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+            <div className="relative bg-zinc-950/80 backdrop-blur-2xl rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/5">
               <Image
+                width="1260"
+                height="660"
                 src="https://res.cloudinary.com/dpacclyw4/image/upload/v1769416119/Screenshot_2026-01-26_134249_lrddwg.png"
-                alt="ArchitectAI Interface"
-                className="w-full h-auto opacity-80 group-hover:opacity-100 transition-opacity duration-700"
-                width={1200}
-                height={800}
-                loading='eager'
-                fetchPriority='high'
+                alt="Architect AI Interface"
+                className="w-full h-auto opacity-50 group-hover:opacity-70 transition-opacity duration-700 grayscale-[0.5] group-hover:grayscale-0"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   whileInView={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="p-6 bg-black/80 rounded-2xl border border-white/10 backdrop-blur-xl text-left max-w-sm shadow-2xl"
+                  className="p-8 bg-zinc-900/90 rounded-sm border border-white/10 backdrop-blur-3xl text-left max-w-sm shadow-2xl relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 bg-indigo-500 rounded flex items-center justify-center text-[10px] font-bold">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="size-8 rounded-sm bg-amber-500 flex items-center justify-center text-[10px] font-black text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]">
                       AI
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-bold text-white tracking-tight uppercase">
                       Architect Co-pilot
                     </span>
                   </div>
-                  <p className="text-xs text-gray-300 leading-relaxed mb-4">
+                  <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-medium">
                     &quot;I&quot;ve analyzed your microservices proposal. Adding
                     a Redis cache between the API Gateway and Auth Service would
                     reduce latency by ~24%.&quot;
                   </p>
                   <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-indigo-600 rounded-lg text-[10px] font-bold text-white hover:bg-indigo-500 transition-colors">
+                    <button className="px-4 py-2 bg-amber-500 rounded-sm text-[10px] text-black hover:bg-amber-400 transition-all ">
                       Apply Changes
                     </button>
-                    <button className="px-3 py-1.5 bg-white/10 rounded-lg text-[10px] font-bold text-white hover:bg-white/20 transition-colors">
+                    <button className="px-4 py-2 bg-white/5 rounded-sm text-[10px] text-white hover:bg-white/10 transition-all border border-white/5 ">
                       Explain Why
                     </button>
                   </div>
+                  <div className="absolute top-[-20%] right-[-20%] size-32 bg-amber-500/10 blur-[40px] rounded-full" />
                 </motion.div>
               </div>
             </div>
@@ -139,9 +138,9 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
         </div>
       </div>
 
-      {/* Background blobs */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] -z-10"></div>
-      <div className="absolute top-1/4 right-0 -translate-y-1/2 w-96 h-96 bg-cyan-600/10 rounded-full blur-[128px] -z-10"></div>
+      {/* Premium Ambient Glows */}
+      <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-[128px] -z-10"></div>
+      <div className="absolute top-1/4 right-0 -translate-y-1/2 w-96 h-96 bg-amber-600/5 rounded-full blur-[128px] -z-10"></div>
     </section>
   );
 };
