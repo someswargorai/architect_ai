@@ -7,14 +7,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col selection:bg-indigo-500/30">
       <Header />
-
       <main className="flex-grow">
-        <>
           <Hero />
           <FeatureSection />
-        </>
       </main>
-
       <Footer />
     </div>
   );
