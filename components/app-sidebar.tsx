@@ -85,7 +85,7 @@ export default function AppSidebar() {
           />
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-white">
-              {user?.firstName || "User"}
+              {user?.firstName ?? "User"}
             </span>
             <span className="text-[10px] text-zinc-500">Free Account</span>
           </div>

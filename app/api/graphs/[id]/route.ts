@@ -21,89 +21,95 @@ const verifyToken = (req: NextRequest): JwtPayload | null => {
 };
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  await connectDB();
+         req: NextRequest,
+         { params }: { params: Promise<{ id: string }> },
+       ) {
+         await connectDB();
 
-  const { id: projectId } = await params;
+         const { id: projectId } = await params;
 
+         const user = verifyToken(req);
+         if (!user) {
+           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+         }
 
-  const user = verifyToken(req);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+         try {
+           const project = await graph
+             .findOne({
+               projectId: projectId,
+               owner: user.id,
+             })
+             .select("nodes edges");
 
-  try {
-    const project = await graph
-      .findOne({
-        projectId: projectId,
-        owner: user.id,
-      })
-      .select("nodes edges");
+           if (!project) {
+             return NextResponse.json(
+               { success: true, message: "Project not found" },
+               { status: 200 },
+             );
+           }
 
-    if (!project) {
-      return NextResponse.json({success: true, message: "Project not found" }, { status: 200 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      nodes: project.nodes || [],
-      edges: project.edges || [],
-    });
-  } catch (error) {
-    console.error("Error loading diagram:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
-}
+           return NextResponse.json({
+             success: true,
+             nodes: project.nodes || [],
+             edges: project.edges || [],
+           });
+         } catch (error) {
+           console.error("Error loading diagram:", error);
+           return NextResponse.json({ error: "Server error" }, { status: 500 });
+         }
+       }
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  await connectDB();
+         req: NextRequest,
+         { params }: { params: Promise<{ id: string }> },
+       ) {
+         await connectDB();
 
-  const user = verifyToken(req);
-  const { id: projectId } = await params;
- 
-  console.log("Saving diagram for projectId:", projectId);
+         const user = verifyToken(req);
+         const { id: projectId } = await params;
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+         console.log("Saving diagram for projectId:", projectId);
 
-  try {
-    const { nodes, edges } = await req.json();
+         if (!user) {
+           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+         }
 
-    if (!Array.isArray(nodes) || !Array.isArray(edges)) {
-      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-    }
+         try {
+           const { nodes, edges } = await req.json();
 
-    const graphResponse = await graph.findOneAndUpdate(
-      { projectId: projectId, owner: user.id },
-      {
-        nodes,
-        edges,
-        owner: user.id,
-        projectId: projectId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
-      },
-    );
+           if (!Array.isArray(nodes) || !Array.isArray(edges)) {
+             return NextResponse.json(
+               { error: "Invalid data" },
+               { status: 400 },
+             );
+           }
 
-    return NextResponse.json({ 
-      success: true,
-      message: graphResponse ? "Graph saved successfully" : "Graph created",
-      graph: graphResponse 
-    });
+           const graphResponse = await graph.findOneAndUpdate(
+             { projectId: projectId, owner: user.id },
+             {
+               nodes,
+               edges,
+               owner: user.id,
+               projectId: projectId,
+               createdAt: new Date(),
+               updatedAt: new Date(),
+             },
+             {
+               new: true,
+               upsert: true,
+               setDefaultsOnInsert: true,
+             },
+           );
 
-  } catch (error) {
-    console.error("Error saving diagram:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
-}
+           return NextResponse.json({
+             success: true,
+             message: graphResponse
+               ? "Graph saved successfully"
+               : "Graph created",
+             graph: graphResponse,
+           });
+         } catch (error) {
+           console.error("Error saving diagram:", error);
+           return NextResponse.json({ error: "Server error" }, { status: 500 });
+         }
+       }
