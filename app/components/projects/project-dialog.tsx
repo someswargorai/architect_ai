@@ -40,7 +40,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
       _id: tempId,
       name,
       createdAt: new Date().toISOString(),
-      progress: "0%",
+      progress: "0",
       priority: "Medium",
     };
     dispatch(addProjectOptimistic(optimisticProject));

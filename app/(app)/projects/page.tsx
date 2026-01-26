@@ -7,36 +7,58 @@ import { Button } from "@/components/ui/button";
 import { ProjectDialog } from "@/app/components/projects/project-dialog";
 import http from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
-import { ArrowUpRight, Bookmark, Calendar, Filter, MoreHorizontal, Plus, Search } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bookmark,
+  Calendar,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Search,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ProjectsSection(){
+export default function ProjectsSection() {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Track loading state
   const projects = useAppSelector((state) => state.project.projects);
   const dispatch = useAppDispatch();
-  const {status} = useSession();
+  const { status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    if(status !== "authenticated") return;
+    if (status !== "authenticated") return;
+
     const fetchProjects = async () => {
-      const res = await http.get("/api/projects");
-      dispatch(setProjects(res?.data));
+      setIsLoading(true);
+      try {
+        const res = await http.get("/api/projects");
+        dispatch(setProjects(res?.data));
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
+
     fetchProjects();
-  }, [dispatch,status]);
-  
+  }, [dispatch, status]);
+
+  // Number of skeleton cards to show (matches typical grid layout)
+  const skeletonCount = 6;
 
   return (
-    <div className="space-y-8 p-3">
-      {/* Personalized Header & Action Bar */}
+    <div className="space-y-8 p-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-x-2">
             <h2 className="text-3xl font-bold tracking-tight text-white">
               My Projects
             </h2>
-            <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold uppercase tracking-wider">
-              {projects.length} Projects
+            <div className="px-2 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold uppercase tracking-wider">
+              {isLoading ? "..." : projects.length} Projects
             </div>
           </div>
           <p className="text-zinc-500 text-sm">
@@ -51,119 +73,165 @@ export default function ProjectsSection(){
               type="text"
               placeholder="Search my projects..."
               className="h-10 w-48 lg:w-64 bg-zinc-900/50 border border-white/5 rounded-xl pl-10 pr-4 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-zinc-700"
+              disabled={isLoading}
             />
           </div>
           <Button
             variant="outline"
             size="sm"
             className="rounded-xl border-white/5 bg-zinc-900/50 h-10 px-4"
+            disabled={isLoading}
           >
             <Filter className="size-4 mr-2 text-zinc-400" />
             Filter
           </Button>
-          {/* <Button
-            onClick={() => setOpen(true)}
-            className="rounded-xl h-10 px-5 shadow-[0_0_20px_rgba(245,158,11,0.2)] font-bold tracking-tight"
-          >
-            <Plus className="size-4 mr-2" />
-            Create New
-          </Button> */}
+          {/* Create button is commented out in original - keeping same */}
         </div>
       </div>
 
-      {/* Grid of Projects */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <div
-            key={project._id}
-            className="group relative flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
-          >
-            {/* Top Row: Category & Quick Actions */}
-            <div className="flex justify-between items-start mb-6">
-              <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors">
-                {/* {project.category} */}
+        {isLoading ? (
+          Array.from({ length: skeletonCount }).map((_, index) => (
+            <div
+              key={`skeleton-${index}`}
+              className="flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl h-full min-h-[340px]"
+            >
+              {/* Top row - category + more button */}
+              <div className="flex justify-between items-start mb-6">
+                <Skeleton className="h-5 w-20 rounded-lg bg-zinc-800/80" />
+                <Skeleton className="size-8 rounded-full bg-zinc-800/80" />
               </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="transition-opacity cursor-pointer"
+
+              {/* Project title + date */}
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-7 w-3/4 rounded-md bg-zinc-800/80" />
+                  <Skeleton className="size-5 rounded-full bg-zinc-800/80" />
+                </div>
+                <Skeleton className="h-4 w-40 rounded bg-zinc-800/80" />
+              </div>
+
+              {/* Progress bar section */}
+              <div className="space-y-2 mb-8">
+                <div className="flex justify-between">
+                  <Skeleton className="h-3 w-28 rounded bg-zinc-800/80" />
+                  <Skeleton className="h-3 w-10 rounded bg-zinc-800/80" />
+                </div>
+                <Skeleton className="h-1.5 w-full rounded-full bg-zinc-800/80" />
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
+                <div className="flex items-center gap-x-2">
+                  <Skeleton className="size-1.5 rounded-full bg-zinc-800/80" />
+                  <Skeleton className="h-3 w-24 rounded bg-zinc-800/80" />
+                </div>
+                <Skeleton className="h-3 w-16 rounded bg-zinc-800/80" />
+              </div>
+
+              {/* Glow effect placeholder */}
+              <div className="absolute -bottom-12 -right-12 size-32 bg-zinc-800/20 blur-[60px]" />
+            </div>
+          ))
+        ) : (
+          <>
+            {projects.map((project) => (
+              <div
+                key={project._id}
+                className="group relative flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
               >
-                <MoreHorizontal className="size-4 text-zinc-500" />
-              </Button>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors">
+                    {/* {project.category} */}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="transition-opacity cursor-pointer"
+                  >
+                    <MoreHorizontal className="size-4 text-zinc-500" />
+                  </Button>
+                </div>
+
+                {/* Project Info */}
+                <div className="space-y-1 mb-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-zinc-100 group-hover:text-white transition-colors tracking-tight truncate pr-4">
+                      {project.name}
+                    </h3>
+                    <ArrowUpRight
+                      className="size-4 text-zinc-700 group-hover:text-amber-500 transition-all duration-300 transform group-hover:translate-x-1 group-hover:-translate-y-1"
+                      onClick={() => router.push(`/projects/${project._id}`)}
+                    />
+                  </div>
+                  <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                    <Calendar className="size-3 mr-1.5" />
+                    Started {new Date(project.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+
+                {/* Personal Milestone Progress */}
+                <div className="space-y-2 mb-8">
+                  <div className="flex justify-between text-[10px] font-bold text-zinc-500 ">
+                    <span>Milestones reached</span>
+                    <span className="text-amber-500">
+                      {project.progress || 0}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${project.progress || 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Footer: Single User Status Label */}
+                <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
+                  <div className="flex items-center gap-x-2">
+                    <div
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        project.priority === "High"
+                          ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                          : project.priority === "Completed"
+                          ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                          : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]",
+                      )}
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                      {project.priority} Priority
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-x-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">
+                    <Bookmark className="size-3" />
+                    Private
+                  </div>
+                </div>
+
+                {/* Minimalist Ambient Glow */}
+                <div className="absolute -bottom-12 -right-12 size-32 bg-amber-500/5 blur-[60px] group-hover:bg-amber-500/10 transition-colors" />
+              </div>
+            ))}
+
+            {/* Add Project Card */}
+            <div
+              onClick={() => setOpen(true)}
+              className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-[2rem] hover:border-amber-500/20 hover:bg-white/[0.01] transition-all cursor-pointer group h-full min-h-[340px]"
+            >
+              <div className="size-12 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-amber-500/40 transition-all">
+                <Plus className="size-5 text-zinc-600 group-hover:text-amber-500" />
+              </div>
+              <p className="text-sm font-semibold text-zinc-500 group-hover:text-zinc-300">
+                Add Project
+              </p>
             </div>
-
-            {/* Project Info */}
-            <div className="space-y-1 mb-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-zinc-100 group-hover:text-white transition-colors tracking-tight truncate pr-4">
-                  {project.name}
-                </h3>
-                <ArrowUpRight className="size-4 text-zinc-700 group-hover:text-amber-500 transition-all duration-300 transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-              </div>
-              <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                <Calendar className="size-3 mr-1.5" />
-                Started {new Date(project.createdAt).toLocaleDateString()}
-              </div>
-            </div>
-
-            {/* Personal Milestone Progress */}
-            <div className="space-y-2 mb-8">
-              <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-tighter">
-                <span>Milestones reached</span>
-                <span className="text-amber-500">
-                  {project.progress || 100}%
-                </span>
-              </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div
-                    className="h-full bg-linear-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${project.progress}%` }}
-                  />
-              </div>
-            </div>
-
-            {/* Footer: Single User Status Label */}
-            <div className="flex items-center justify-between pt-6 border-t border-white/5">
-              <div className="flex items-center gap-x-2">
-                <div
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    project.priority === "High"
-                      ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-                      : project.priority === "Completed"
-                      ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                      : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]",
-                  )}
-                />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                  {project.priority} Priority
-                </span>
-              </div>
-
-              <div className="flex items-center gap-x-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">
-                <Bookmark className="size-3" />
-                Private
-              </div>
-            </div>
-
-            {/* Minimalist Ambient Glow */}
-            <div className="absolute -bottom-12 -right-12 size-32 bg-amber-500/5 blur-[60px] group-hover:bg-amber-500/10 transition-colors" />
-          </div>
-        ))}
-
-        <div
-          onClick={() => setOpen(true)}
-          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-[2rem] hover:border-amber-500/20 hover:bg-white/[0.01] transition-all cursor-pointer group h-full min-h-[260px]"
-        >
-          <div className="size-12 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-amber-500/40 transition-all">
-            <Plus className="size-5 text-zinc-600 group-hover:text-amber-500" />
-          </div>
-          <p className="text-sm font-semibold text-zinc-500 group-hover:text-zinc-300" onClick={()=>setOpen(true)}>
-            Add Project
-          </p>
-        </div>
+          </>
+        )}
       </div>
+
       <ProjectDialog open={open} onOpenChange={setOpen} />
     </div>
   );
-};
+}

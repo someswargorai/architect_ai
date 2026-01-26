@@ -2,13 +2,16 @@
 
 import "@xyflow/react/dist/style.css";
 import { ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap } from "@xyflow/react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { NodeChange, EdgeChange, Connection, Node } from "@xyflow/react";
 import AddNodePanel from "@/app/components/dashboard/add-panel";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { setEdges, setNodes } from "@/store/slices/flowSlice";
 import { EditNodeModal } from "@/app/components/dashboard/edit-node-modal";
+import { useParams } from "next/navigation";
+import http from "@/lib/apiClient";
+import { useSession } from "next-auth/react";
 
 
 const CanvasStudio = () => {
@@ -20,6 +23,35 @@ const CanvasStudio = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [editedLabel, setEditedLabel] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
+  const {id: projectId}= useParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const {status} = useSession();
+
+  useEffect(() => {
+    if (status !== "authenticated" || !projectId) return;
+
+    const loadDiagram = async () => {
+      setIsLoading(true);
+      try {
+        const res = await http.get(`/api/graphs/${projectId}`);
+        if (res.data.success) {
+          if(res?.data?.message==="Project not found"){
+            dispatch(setNodes([]));
+            dispatch(setEdges([]));
+            return;
+          }
+          dispatch(setNodes(res.data.nodes));
+          dispatch(setEdges(res.data.edges));
+        }
+      } catch (error) {
+        console.error("Failed to load diagram:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDiagram();
+  }, [dispatch, projectId, status]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -49,6 +81,21 @@ const CanvasStudio = () => {
     []
   );
 
+useEffect(() => {
+    if (isLoading || !projectId) return;
+
+    const saveDiagram = async () => {
+      try {
+        await http.post(`/api/graphs/${projectId}`, { nodes, edges });
+      } catch (error) {
+        console.error("Failed to save diagram:", error);
+      }
+    };
+
+    const timeout = setTimeout(saveDiagram, 10000);
+    return () => clearTimeout(timeout);
+
+  }, [nodes, edges, projectId, isLoading]);
 
   const onConnect = useCallback(
     (params: Connection) => {

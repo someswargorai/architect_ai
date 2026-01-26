@@ -45,19 +45,14 @@ const UserCard = ({ user }: UserCardProps) => {
     await signOut({ redirect: false });
     setLoading(true);
     try {
-      const response = await axios.get("/auth/logout");
-
-      if (!response?.data?.success) {
-        toast.error(response?.data?.message || "Error while log out");
-      }
-
+     
       document.cookie.split(";").forEach((c) => {
         document.cookie = c
           .replace(/^ +/, "")
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
       setLoading(false);
-      router.push("/login");
+      router.push("/auth");
     } catch (err) {
       setLoading(false);
       if (axios.isAxiosError(err)) {
@@ -128,9 +123,9 @@ const UserCard = ({ user }: UserCardProps) => {
 
       {/* Logout Confirmation Alert */}
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-black border border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-white">
               Are you sure you want to logout?
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -139,12 +134,12 @@ const UserCard = ({ user }: UserCardProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">
+            <AlertDialogCancel className="cursor-pointer text-black">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 cursor-pointer"
+              className="bg-amber-600 hover:bg-amber-700 cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="animate-spin" size={20} />

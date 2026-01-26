@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
           email: user.email,
           name: user.name,
         },
-        "15m",
+        "1d",
       );
 
       const refreshToken = signJwt(
