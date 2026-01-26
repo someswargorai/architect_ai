@@ -151,7 +151,6 @@ export default function ProjectsSection(){
           </div>
         ))}
 
-        {/* Empty Placeholder Card */}
         <div
           onClick={() => setOpen(true)}
           className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-[2rem] hover:border-amber-500/20 hover:bg-white/[0.01] transition-all cursor-pointer group h-full min-h-[260px]"
