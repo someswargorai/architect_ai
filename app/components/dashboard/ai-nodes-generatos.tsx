@@ -160,16 +160,17 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
         <div className="px-6 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
-              <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-100 ring-4 ring-indigo-50">
-                <Cpu className="w-5 h-5 text-white" />
-              </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-1.5 leading-none">
-                  Architect
-                  <span className="text-indigo-600 font-extrabold">AI</span>
-                </h2>
+                <div className="px-2 flex items-center gap-x-3 mb-2">
+                  <div className="size-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                    <div className="size-4 bg-black rounded-sm rotate-45" />
+                  </div>
+                  <span className="text-xl font-bold tracking-tighter text-black">
+                    Architect Ai
+                  </span>
+                </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-700 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
                     <Zap className="w-2.5 h-2.5 fill-current" />
                     v0.2 Pro
                   </span>
@@ -194,7 +195,7 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
               onClick={() => setActiveTab("generate")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                 activeTab === "generate"
-                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200"
+                  ? "bg-white text-amber-600 shadow-sm ring-1 ring-slate-200"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -205,7 +206,7 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
               onClick={() => setActiveTab("ask")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                 activeTab === "ask"
-                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200"
+                  ? "bg-white text-amber-600 shadow-sm ring-1 ring-slate-200"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -215,8 +216,8 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
           </div>
         </div>
 
-        {/* Main Content Area - Properly Handles Overflows */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth bg-[#FCFDFF]">
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth bg-[#fdfdfd]">
           {activeTab === "generate" ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="space-y-3">
@@ -225,13 +226,13 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
                     <Terminal className="w-3.5 h-3.5" />
                     Technical Requirements
                   </label>
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 rounded-lg text-indigo-600 border border-indigo-100">
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 rounded-lg text-amber-700 border border-amber-100">
                     <Layout className="w-3 h-3" />
                     <span className="text-[10px] font-bold">Design Mode</span>
                   </div>
                 </div>
                 <textarea
-                  className="w-full h-64 px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-200 resize-none text-sm text-slate-700 placeholder:text-slate-300 font-medium leading-relaxed shadow-sm"
+                  className="w-full h-64 px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all duration-200 resize-none text-sm text-slate-700 placeholder:text-slate-300 font-medium leading-relaxed shadow-sm"
                   placeholder="Describe your infrastructure needs (e.g., 'A multi-region e-commerce platform with Redis caching and S3 storage for static assets')..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -240,20 +241,20 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-24 group hover:border-indigo-200 transition-colors">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-24 group hover:border-amber-200 transition-colors">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                     Architecture
                   </p>
-                  <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                  <p className="text-sm font-bold text-slate-700 group-hover:text-amber-600 transition-colors">
                     Cloud Native
                   </p>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-300 self-end" />
                 </div>
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-24 group hover:border-indigo-200 transition-colors">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-24 group hover:border-amber-200 transition-colors">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                     Resolution
                   </p>
-                  <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                  <p className="text-sm font-bold text-slate-700 group-hover:text-amber-600 transition-colors">
                     High Detail
                   </p>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-300 self-end" />
@@ -292,20 +293,19 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
                       }`}
                     >
                       <div
-                        className={`max-w-full px-4 py-4 rounded-[20px] text-[13px] leading-relaxed shadow-sm border overflow-hidden ${
+                        className={`max-w-full px-5 py-4 rounded-[20px] text-[13px] leading-relaxed shadow-sm border overflow-hidden ${
                           msg.role === "user"
-                            ? "bg-indigo-600 border-indigo-500 text-white rounded-tr-none"
+                            ? "bg-amber-600 border-amber-500 text-white rounded-tr-none"
                             : "bg-white border-slate-100 text-slate-700 rounded-tl-none ring-1 ring-slate-100/50"
                         }`}
                       >
                         <div
-                          className="prose prose-sm prose-slate max-w-none break-word overflow-x-auto
+                          className="prose prose-sm prose-slate max-w-none break-words overflow-x-hidden
                         prose-headings:font-bold prose-headings:text-slate-900 
-                        prose-p:leading-relaxed prose-strong:text-indigo-600
-                        prose-code:bg-slate-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600 prose-code:font-mono prose-code:text-[12px]
+                        prose-p:leading-relaxed prose-strong:text-amber-600
+                        prose-code:bg-amber-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-amber-700 prose-code:font-mono prose-code:text-[12px]
                         prose-pre:bg-slate-900 prose-pre:p-4 prose-pre:rounded-xl prose-pre:shadow-xl prose-pre:overflow-x-auto prose-pre:max-w-full prose-pre:border prose-pre:border-slate-800
-                        [&_pre_code]:font-semibold
-                        [&_pre_code]:text-slate-600 [&_pre_code]:bg-transparent [&_pre_code]:p-0
+                        [&_pre_code]:text-amber-100 [&_pre_code]:bg-transparent [&_pre_code]:p-0
                       "
                         >
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -318,8 +318,8 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
                   ))}
 
                   {loading && (
-                    <div className="flex items-center gap-3 px-5 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm animate-pulse ring-1 ring-indigo-50">
-                      <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
+                    <div className="flex items-center gap-3 px-5 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm animate-pulse ring-1 ring-amber-50">
+                      <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
                       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                         Architect is thinking...
                       </span>
@@ -332,13 +332,13 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
           )}
         </div>
 
-        {/* Footer Inputs - Sticky and Responsive */}
+        {/* Footer Inputs */}
         <div className="px-6 pb-8 pt-4 border-t border-slate-100 bg-white shrink-0">
           {activeTab === "generate" ? (
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || loading}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white rounded-2xl font-bold text-sm transition-all duration-200 shadow-xl shadow-indigo-100 active:scale-[0.98] cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-200 text-white rounded-sm font-bold text-sm transition-all duration-200 active:scale-[0.98] cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -349,7 +349,7 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
             </button>
           ) : (
             <div className="flex flex-col gap-3 group">
-              <div className="relative flex items-center bg-white border border-slate-200 p-1 rounded-2xl shadow-lg shadow-slate-100 focus-within:ring-4 focus-within:ring-indigo-500/5 focus-within:border-indigo-400 transition-all duration-300">
+              <div className="relative flex items-center bg-white border border-slate-200 p-1 rounded-2xl shadow-lg shadow-slate-100 focus-within:ring-4 focus-within:ring-amber-500/5 focus-within:border-amber-400 transition-all duration-300">
                 <textarea
                   rows={1}
                   placeholder="Ask Architect AI..."
@@ -371,14 +371,14 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
                 <button
                   onClick={handleAsk}
                   disabled={!question.trim() || loading}
-                  className="self-end mb-1 mr-1 p-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 text-white disabled:text-slate-300 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="self-end mb-1 mr-1 p-3.5 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-100 text-white disabled:text-slate-300 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </div>
               <div className="flex items-center justify-between px-2">
                 <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 uppercase tracking-wide">
-                  <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+                  <div className="w-1 h-1 bg-amber-500 rounded-full animate-pulse" />
                   Gemini Flash 3 Engine
                 </p>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
