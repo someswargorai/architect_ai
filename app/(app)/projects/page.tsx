@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hook/hook";
 import { setProjects } from "@/store/slices/projectSlice";
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,18 @@ import {
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectActions } from "@/app/components/projects/options";
+import { Input } from "@/components/ui/input";
 
 export default function ProjectsSection() {
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Track loading state
+  const [isLoading, setIsLoading] = useState(true);
   const projects = useAppSelector((state) => state.project.projects);
   const dispatch = useAppDispatch();
   const { status } = useSession();
   const router = useRouter();
+  const [search, setSearch] = useState("");
+  const debounceRef = useRef<NodeJS.Timeout>(null);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -34,7 +38,7 @@ export default function ProjectsSection() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        const res = await http.get("/api/projects");
+        const res = await http.get(`/api/projects?search=${search}`);
         dispatch(setProjects(res?.data));
       } catch (error) {
         console.error("Failed to fetch projects:", error);
@@ -44,9 +48,20 @@ export default function ProjectsSection() {
     };
 
     fetchProjects();
-  }, [dispatch, status]);
+  }, [dispatch, status, search]);
 
-  // Number of skeleton cards to show (matches typical grid layout)
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      setSearch(value);
+    }, 500);
+  };
+
   const skeletonCount = 6;
 
   return (
@@ -69,10 +84,11 @@ export default function ProjectsSection() {
         <div className="flex items-center gap-x-3">
           <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600" />
-            <input
+            <Input
               type="text"
+              onChange={handleSearch}
               placeholder="Search my projects..."
-              className="h-10 w-48 lg:w-64 bg-zinc-900/50 border border-white/5 rounded-xl pl-10 pr-4 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-zinc-700"
+              className="h-10 w-48 lg:w-64 bg-zinc-900/50 border border-white/5 rounded-sm pl-10 pr-4 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-zinc-700 hover:ring-0!"
               disabled={isLoading}
             />
           </div>
@@ -85,7 +101,6 @@ export default function ProjectsSection() {
             <Filter className="size-4 mr-2 text-zinc-400" />
             Filter
           </Button>
-          {/* Create button is commented out in original - keeping same */}
         </div>
       </div>
 
@@ -94,15 +109,13 @@ export default function ProjectsSection() {
           Array.from({ length: skeletonCount }).map((_, index) => (
             <div
               key={`skeleton-${index}`}
-              className="flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl h-full min-h-[340px]"
+              className="flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-smz border border-white/5 overflow-hidden shadow-2xl h-full min-h-[340px]"
             >
-              {/* Top row - category + more button */}
               <div className="flex justify-between items-start mb-6">
                 <Skeleton className="h-5 w-20 rounded-lg bg-zinc-800/80" />
                 <Skeleton className="size-8 rounded-full bg-zinc-800/80" />
               </div>
 
-              {/* Project title + date */}
               <div className="space-y-3 mb-8">
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-7 w-3/4 rounded-md bg-zinc-800/80" />
@@ -111,7 +124,6 @@ export default function ProjectsSection() {
                 <Skeleton className="h-4 w-40 rounded bg-zinc-800/80" />
               </div>
 
-              {/* Progress bar section */}
               <div className="space-y-2 mb-8">
                 <div className="flex justify-between">
                   <Skeleton className="h-3 w-28 rounded bg-zinc-800/80" />
@@ -120,7 +132,6 @@ export default function ProjectsSection() {
                 <Skeleton className="h-1.5 w-full rounded-full bg-zinc-800/80" />
               </div>
 
-              {/* Footer */}
               <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
                 <div className="flex items-center gap-x-2">
                   <Skeleton className="size-1.5 rounded-full bg-zinc-800/80" />
@@ -129,7 +140,6 @@ export default function ProjectsSection() {
                 <Skeleton className="h-3 w-16 rounded bg-zinc-800/80" />
               </div>
 
-              {/* Glow effect placeholder */}
               <div className="absolute -bottom-12 -right-12 size-32 bg-zinc-800/20 blur-[60px]" />
             </div>
           ))
@@ -138,22 +148,20 @@ export default function ProjectsSection() {
             {projects.map((project) => (
               <div
                 key={project._id}
-                className="group relative flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
+                className="group relative flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-sm border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
               >
                 <div className="flex justify-between items-start mb-6">
-                  <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors">
-                    {/* {project.category} */}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="transition-opacity cursor-pointer"
-                  >
-                    <MoreHorizontal className="size-4 text-zinc-500" />
-                  </Button>
+                  <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors"></div>
+                  <ProjectActions
+                    onEdit={() => {
+                      console.log("Edit project", project._id);
+                    }}
+                    onDelete={() => {
+                      console.log("Delete project", project._id);
+                    }}
+                  />
                 </div>
 
-                {/* Project Info */}
                 <div className="space-y-1 mb-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-zinc-100 group-hover:text-white transition-colors tracking-tight truncate pr-4">
@@ -170,7 +178,6 @@ export default function ProjectsSection() {
                   </div>
                 </div>
 
-                {/* Personal Milestone Progress */}
                 <div className="space-y-2 mb-8">
                   <div className="flex justify-between text-[10px] font-bold text-zinc-500 ">
                     <span>Milestones reached</span>
@@ -186,7 +193,6 @@ export default function ProjectsSection() {
                   </div>
                 </div>
 
-                {/* Footer: Single User Status Label */}
                 <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
                   <div className="flex items-center gap-x-2">
                     <div
@@ -210,15 +216,13 @@ export default function ProjectsSection() {
                   </div>
                 </div>
 
-                {/* Minimalist Ambient Glow */}
                 <div className="absolute -bottom-12 -right-12 size-32 bg-amber-500/5 blur-[60px] group-hover:bg-amber-500/10 transition-colors" />
               </div>
             ))}
 
-            {/* Add Project Card */}
             <div
               onClick={() => setOpen(true)}
-              className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-[2rem] hover:border-amber-500/20 hover:bg-white/[0.01] transition-all cursor-pointer group h-full min-h-[340px]"
+              className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-sm hover:border-amber-500/20 hover:bg-white/[0.01] transition-all cursor-pointer group h-full min-h-[340px]"
             >
               <div className="size-12 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-amber-500/40 transition-all">
                 <Plus className="size-5 text-zinc-600 group-hover:text-amber-500" />

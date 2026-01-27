@@ -67,17 +67,21 @@ body {
 }
 ::-webkit-scrollbar {
   width: 0px;
+  height: 0px;
 }
 ::-webkit-scrollbar-track {
   background: #c6c7ca;
   width: 0px !important;
+  height: 0px !important
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: #e2e2e2;
   border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: #ffffff;
+  width: 1px;
+  height: 1px;
 }
 
 /* styles/sidebar.css */
@@ -132,7 +136,11 @@ body {
   margin-top: auto;
 }
 
-
+.react-markdown pre,
+.react-markdown code {
+  color: #111827; /* dark gray/black */
+  background-color: #202020; /* optional light background */
+}
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);

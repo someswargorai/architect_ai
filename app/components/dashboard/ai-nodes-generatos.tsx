@@ -1,26 +1,26 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { SheetContent, } from "@/components/ui/sheet";
 import {
   Sparkles,
   MessageSquare,
   Send,
-  ChevronRight,
   Loader2,
   Cpu,
   History,
   AlertCircle,
   Terminal,
   Zap,
+  ChevronDown,
+  Layout,
+  X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setNodes, setEdges } from "@/store/slices/flowSlice";
 import { RootState } from "@/store/store";
 import ReactMarkdown from "react-markdown";
 import "highlight.js/styles/github.css";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import { getLayoutedElements } from "@/utils/get-element-layout";
 
@@ -90,8 +90,7 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
         nodes: layoutedNodes,
         edges: layoutedEdges,
       } = getLayoutedElements(
-        graph.nodes.map(
-          (n: {
+        graph.nodes.map((n: {
             id: string;
             label: string;
             type?: string;
@@ -131,7 +130,7 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          history: newHistory,
+          question: question,
           nodes,
           edges,
         }),
@@ -155,113 +154,136 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
   };
 
   return (
-    <SheetContent className="max-w-lg bg-white shadow-2xl overflow-hidden">
-      <div className="flex flex-col h-full bg-white relative">
-        <SheetHeader>
-          <div className="flex items-center gap-2 mb-0.5">
-            <div className="bg-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-100">
-              <Cpu className="w-5 h-5 text-white" />
+    <SheetContent className="sm:max-w-lg bg-white shadow-2xl overflow-hidden">
+      <div className="flex flex-col h-full w-full bg-white">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-100 shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-100 ring-4 ring-indigo-50">
+                <Cpu className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-1.5 leading-none">
+                  Architect
+                  <span className="text-indigo-600 font-extrabold">AI</span>
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                    <Zap className="w-2.5 h-2.5 fill-current" />
+                    v0.2 Pro
+                  </span>
+                  <div className="w-1 h-1 bg-slate-300 rounded-full" />
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                    Active Workspace
+                  </span>
+                </div>
+              </div>
             </div>
-            <SheetTitle className="text-xl font-bold text-slate-900 tracking-tight">
-              Architect<span className="text-indigo-600">AI</span>
-            </SheetTitle>
+            <button
+              // onClick={onCancel}
+              className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-              <Zap className="w-2.5 h-2.5 fill-current" />
-              v0.1 Enterprise
-            </span>
-            <span className="text-[10px] text-slate-400 font-bold ">
-              Active Workspace
-            </span>
-          </div>
-        </SheetHeader>
 
-        <div className="px-3 pt-6 pb-2">
-          <div className="flex bg-slate-100/80 backdrop-blur-sm p-1.5 rounded-2xl border border-slate-200/50">
+          {/* Tab Switcher */}
+          <div className="flex bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab("generate")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer duration-300 ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                 activeTab === "generate"
-                  ? "bg-white text-indigo-600 shadow-sm border border-slate-200/50"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-3.5 h-3.5" />
               Generate
             </button>
             <button
               onClick={() => setActiveTab("ask")}
-              className={`flex-1 flex items-center cursor-pointer justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                 activeTab === "ask"
-                  ? "bg-white text-indigo-600 shadow-sm border border-slate-200/50"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className="w-3.5 h-3.5" />
               Analyze
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
+        {/* Main Content Area - Properly Handles Overflows */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth bg-[#FCFDFF]">
           {activeTab === "generate" ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-400 flex items-center gap-2">
-                  <Terminal className="w-3.5 h-3.5" />
-                  Technical Requirement
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Terminal className="w-3.5 h-3.5" />
+                    Technical Requirements
+                  </label>
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 rounded-lg text-indigo-600 border border-indigo-100">
+                    <Layout className="w-3 h-3" />
+                    <span className="text-[10px] font-bold">Design Mode</span>
+                  </div>
+                </div>
                 <textarea
-                  className="w-full h-80 px-5 py-5 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-300 resize-none text-slate-800 placeholder:text-slate-400 font-medium text-sm leading-relaxed"
-                  placeholder="Describe infrastructure details..."
+                  className="w-full h-64 px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-200 resize-none text-sm text-slate-700 placeholder:text-slate-300 font-medium leading-relaxed shadow-sm"
+                  placeholder="Describe your infrastructure needs (e.g., 'A multi-region e-commerce platform with Redis caching and S3 storage for static assets')..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   disabled={loading}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-24 group hover:border-indigo-200 transition-colors">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                    Context
+                    Architecture
                   </p>
-                  <p className="text-xs font-bold text-slate-700">
-                    {nodes.length} Nodes Loaded
+                  <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                    Cloud Native
                   </p>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-300 self-end" />
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-24 group hover:border-indigo-200 transition-colors">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                    Output
+                    Resolution
                   </p>
-                  <p className="text-xs font-bold text-slate-700">
-                    JSON Architecture
+                  <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                    High Detail
                   </p>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-300 self-end" />
                 </div>
               </div>
 
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs font-bold">{error}</p>
+                <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 animate-in zoom-in-95">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold leading-relaxed">{error}</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col min-h-full space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col min-h-full space-y-6 animate-in fade-in duration-300">
               {chatHistory.length === 0 ? (
-                <div className="flex flex-col items-center justify-center flex-1 text-center py-20 opacity-40">
-                  <History className="w-10 h-10 text-slate-400 mb-4" />
-                  <h3 className="text-slate-900 font-bold text-sm mb-1">
-                    Architecture Analysis
+                <div className="flex flex-col items-center justify-center flex-1 text-center py-20 opacity-40 select-none">
+                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                    <History className="w-10 h-10 text-slate-300" />
+                  </div>
+                  <h3 className="text-slate-900 font-bold text-sm mb-2 uppercase tracking-wide">
+                    Ready for Analysis
                   </h3>
-                  <p className="text-[12px] text-slate-500 max-w-[200px] leading-relaxed">
-                    Ask questions about bottlenecks, cost optimization, or
-                    security.
+                  <p className="text-[12px] text-slate-500 max-w-[240px] leading-relaxed font-medium">
+                    Ask me about bottlenecks, security hardening, or cost
+                    optimizations for your current layout.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-6 pb-10">
+                <div className="space-y-6 pb-6">
                   {chatHistory.map((msg, idx) => (
                     <div
                       key={idx}
@@ -270,23 +292,36 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
                       }`}
                     >
                       <div
-                        className={`max-w-[90%] px-5 py-4 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm border ${
+                        className={`max-w-full px-4 py-4 rounded-[20px] text-[13px] leading-relaxed shadow-sm border overflow-hidden ${
                           msg.role === "user"
                             ? "bg-indigo-600 border-indigo-500 text-white rounded-tr-none"
-                            : "bg-slate-50 border-slate-100 text-slate-800 rounded-tl-none"
+                            : "bg-white border-slate-100 text-slate-700 rounded-tl-none ring-1 ring-slate-100/50"
                         }`}
                       >
-                        <div className="prose prose-sm prose-slate max-w-none">
+                        <div
+                          className="prose prose-sm prose-slate max-w-none break-word overflow-x-auto
+                        prose-headings:font-bold prose-headings:text-slate-900 
+                        prose-p:leading-relaxed prose-strong:text-indigo-600
+                        prose-code:bg-slate-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600 prose-code:font-mono prose-code:text-[12px]
+                        prose-pre:bg-slate-900 prose-pre:p-4 prose-pre:rounded-xl prose-pre:shadow-xl prose-pre:overflow-x-auto prose-pre:max-w-full prose-pre:border prose-pre:border-slate-800
+                        [&_pre_code]:font-semibold
+                        [&_pre_code]:text-slate-600 [&_pre_code]:bg-transparent [&_pre_code]:p-0
+                      "
+                        >
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       </div>
+                      <span className="text-[9px] font-bold text-slate-300 mt-1.5 uppercase tracking-widest px-2">
+                        {msg.role === "user" ? "Requested" : "Analysis"}
+                      </span>
                     </div>
                   ))}
+
                   {loading && (
-                    <div className="flex items-center gap-2 px-5 py-4 bg-slate-50 rounded-2xl animate-pulse border border-slate-100">
+                    <div className="flex items-center gap-3 px-5 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm animate-pulse ring-1 ring-indigo-50">
                       <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Analyzing Schema...
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Architect is thinking...
                       </span>
                     </div>
                   )}
@@ -297,38 +332,59 @@ const AICreateNodeSheetContent: React.FC<AICreateNodeSheetContentProps> = () => 
           )}
         </div>
 
-        <div className="px-8 pb-8 pt-4 border-t border-slate-100 bg-white">
+        {/* Footer Inputs - Sticky and Responsive */}
+        <div className="px-6 pb-8 pt-4 border-t border-slate-100 bg-white shrink-0">
           {activeTab === "generate" ? (
-            <Button
+            <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || loading}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white rounded-md font-bold text-sm transition-all duration-300 shadow-xl shadow-indigo-100 active:scale-[0.98] cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white rounded-2xl font-bold text-sm transition-all duration-200 shadow-xl shadow-indigo-100 active:scale-[0.98] cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <ChevronRight className="w-4 h-4" />
+                <Zap className="w-4 h-4 fill-white" />
               )}
               Synthesize Blueprint
-            </Button>
+            </button>
           ) : (
-            <div className="flex items-center gap-3 bg-white border border-slate-200 p-1.5 rounded-lg shadow-lg shadow-slate-100 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
-              <Textarea
-                rows={6}
-                placeholder="Ask Architect AI..."
-                className="flex-1 bg-transparent px-4 py-2 text-sm text-slate-800 outline-none font-medium border-0 shadow-none focus:ring-0!"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAsk()}
-                disabled={loading}
-              />
-              <button
-                onClick={handleAsk}
-                disabled={!question.trim() || loading}
-                className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl transition-all shadow-md active:scale-90 cursor-pointer"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+            <div className="flex flex-col gap-3 group">
+              <div className="relative flex items-center bg-white border border-slate-200 p-1 rounded-2xl shadow-lg shadow-slate-100 focus-within:ring-4 focus-within:ring-indigo-500/5 focus-within:border-indigo-400 transition-all duration-300">
+                <textarea
+                  rows={1}
+                  placeholder="Ask Architect AI..."
+                  className="flex-1 bg-transparent px-5 py-4 text-sm text-slate-700 outline-none font-medium border-0 shadow-none focus:ring-0 resize-none max-h-32 scrollbar-hide"
+                  value={question}
+                  onChange={(e) => {
+                    setQuestion(e.target.value);
+                    e.target.style.height = "auto";
+                    e.target.style.height = e.target.scrollHeight + "px";
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAsk();
+                    }
+                  }}
+                  disabled={loading}
+                />
+                <button
+                  onClick={handleAsk}
+                  disabled={!question.trim() || loading}
+                  className="self-end mb-1 mr-1 p-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 text-white disabled:text-slate-300 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center justify-between px-2">
+                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 uppercase tracking-wide">
+                  <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+                  Gemini Flash 3 Engine
+                </p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
+                  Press Enter to send
+                </p>
+              </div>
             </div>
           )}
         </div>
