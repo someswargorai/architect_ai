@@ -51,15 +51,10 @@ export async function GET(req: NextRequest) {
         $regex: search,
         $options: "i",
       };
-    }
-
-    console.log(query);
-
+    }  
     const projects = await Project.find(query).sort({
       createdAt: -1,
     });
-
-    console.log(projects);
 
     return NextResponse.json(projects, { status: 200 });
   } catch (err) {

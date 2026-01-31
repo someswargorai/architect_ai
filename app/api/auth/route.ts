@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     let user = await User.findOne({ email: normalizedEmail });
 
     if (user) {
-      console.log(password, user.password);
+   
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) {
         return NextResponse.json(
@@ -75,8 +75,6 @@ export async function POST(req: NextRequest) {
       }
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-
-      console.log("hashedPassword:",hashedPassword);
 
       const accessToken = signJwt(
         {

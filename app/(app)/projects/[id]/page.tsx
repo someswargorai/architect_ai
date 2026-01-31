@@ -76,7 +76,6 @@ const CanvasStudio = () => {
       setEditedLabel(String(node.data?.label || ""));
       const desc = node.data?.description || "";
       setEditedDescription(desc as string)
-      console.log("Double clicked node:", node);
       setIsEditModalOpen(true);
     },
     []

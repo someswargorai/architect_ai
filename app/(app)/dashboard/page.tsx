@@ -1,9 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProjectDialog } from "@/app/components/projects/project-dialog";
-
+import http from "@/lib/apiClient";
+import { toast } from "sonner";
+import axios from "axios";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 interface Project {
   _id: string;
@@ -48,8 +52,37 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
       priority: "High",
     },
   ]);
+  const [recentlyAddedArchitures, setRecentlyAddedArchitectures] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(true);
+  const {status} =  useSession();
+
+  useEffect(() => {
+    if(status!=="authenticated") return;
+
+    const fetchRecentlyInvitedArchitectures = async () => {
+      try {
+        const response = await http.get(
+          "/api/dashboard/recently-invited-architectures",
+        );
+
+        if (!response?.data?.success) {
+          return toast.error(response?.data?.message);
+        }
+
+        console.log(response?.data?.projects);;
+        setRecentlyAddedArchitectures(response?.data?.projects);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          return toast.error(err?.response?.data?.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentlyInvitedArchitectures();
+  }, [status]);
 
   // Mocked session data
   const sessionUser = { name: "Architect One" };
@@ -87,7 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
             onClick={() => setOpen(true)}
-            className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black uppercase tracking-widest rounded-sm shadow-[0_10px_30px_rgba(245,158,11,0.2)] transition-all flex items-center gap-3 group"
+            className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black uppercase tracking-widest rounded-sm shadow-[0_10px_30px_rgba(245,158,11,0.2)] transition-all flex items-center gap-3 group cursor-pointer"
           >
             <svg
               className="w-4 h-4 group-hover:rotate-90 transition-transform"
@@ -139,10 +172,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
           {/* Recent Projects */}
           <div className="lg:col-span-4 space-y-6">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              Recent Architecture Designs
+              Recent Invited Architecture Designs
             </h2>
             <div className="bg-zinc-900/30 border border-white/5 backdrop-blur-xl rounded-sm p-2">
-              {recentProjects.length === 0 ? (
+              {recentlyAddedArchitures.length === 0 ? (
                 <div className="py-20 text-center">
                   <div className="size-16 bg-zinc-950 rounded-sm border border-white/5 flex items-center justify-center mx-auto mb-6">
                     <svg
@@ -165,11 +198,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {recentProjects.map((project) => (
+                  {recentlyAddedArchitures.map((project, index) => (
                     <ProjectItem
-                      key={project._id}
+                      key={index}
                       project={project}
-                      onClick={onLaunchEditor}
                     />
                   ))}
                 </div>
@@ -206,65 +238,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
           </div>
         </div>
       </div>
-
-      {/* Logout Dialog Integrated */}
-      <AnimatePresence>
-        {logoutDialogOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setLogoutDialogOpen(false)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative bg-zinc-950 border border-white/10 rounded-sm p-12 max-w-md w-full shadow-[0_50px_100px_rgba(0,0,0,1)]"
-            >
-              <div className="size-12 bg-red-500/10 rounded-sm flex items-center justify-center mb-8 text-red-500 border border-red-500/20">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-4">
-                Confirm Exit
-              </h3>
-              <p className="text-zinc-500 text-sm font-medium mb-12 leading-relaxed">
-                You will be signed out of your current architectural
-                environment. Ensure all changes are committed to the cloud
-                registry.
-              </p>
-              <div className="flex items-center justify-end gap-8">
-                <button
-                  onClick={() => setLogoutDialogOpen(false)}
-                  className="text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-colors"
-                >
-                  Return
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="px-10 py-4 bg-red-500 hover:bg-red-400 text-black text-[10px] font-black uppercase tracking-widest rounded-sm transition-all shadow-[0_10px_30px_rgba(239,68,68,0.2)]"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <ProjectDialog open={open} onOpenChange={setOpen} />
     </div>
@@ -456,18 +429,16 @@ function QuickAction({
 
 function ProjectItem({
   project,
-  onClick,
 }: {
   project: Project;
-  onClick: () => void;
 }) {
   const date = new Date(project.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
   return (
-    <div
-      onClick={onClick}
+    <Link
+     href={`/projects/${project._id}`}
       className="p-5 flex items-center justify-between border-b border-white/5 last:border-0 hover:bg-zinc-900/50 transition-colors cursor-pointer group"
     >
       <div className="flex items-center gap-6">
@@ -498,7 +469,7 @@ function ProjectItem({
       <div className="flex items-center gap-8">
         <div className="flex flex-col items-end">
           <span className="text-[10px] font-black text-amber-500/80 mb-1">
-            {project.progress}%
+            {project.progress || 0}%
           </span>
           <div className="w-24 h-0.5 bg-zinc-800 rounded-full">
             <div
@@ -521,7 +492,7 @@ function ProjectItem({
           />
         </svg>
       </div>
-    </div>
+    </Link>
   );
 }
 

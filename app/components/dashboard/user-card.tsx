@@ -39,7 +39,6 @@ const UserCard = ({ user }: UserCardProps) => {
   const [alertOpen, setAlertOpen] = useState(false);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const session = useSession();
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -67,16 +66,16 @@ const UserCard = ({ user }: UserCardProps) => {
         <PopoverTrigger asChild>
           <button className="flex items-center gap-2.5 focus:outline-none">
             <Avatar className="sm:size-10 cursor-pointer ring-2 ring-transparent hover:ring-orange-400 transition-all">
-              
-                <AvatarImage
-                  src={user?.profilePic || "https://res.cloudinary.com/dpacclyw4/image/upload/v1769409502/og_image_rrnstk.png"}
-                  alt={user.firstName + " " + user.lastName}
-                  className="object-cover"
-                />
-              
-              <AvatarFallback className="text-white">
-                User
-              </AvatarFallback>
+              <AvatarImage
+                src={
+                  user?.profilePic ||
+                  "https://res.cloudinary.com/dpacclyw4/image/upload/v1769409502/og_image_rrnstk.png"
+                }
+                alt={user.firstName + " " + user.lastName}
+                className="object-cover"
+              />
+
+              <AvatarFallback className="text-white">User</AvatarFallback>
             </Avatar>
 
             <div className="hidden sm:block text-left">
@@ -121,33 +120,42 @@ const UserCard = ({ user }: UserCardProps) => {
         </PopoverContent>
       </Popover>
 
-      {/* Logout Confirmation Alert */}
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <AlertDialogContent className="bg-black border border-gray-700">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">
-              Are you sure you want to logout?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              You will be signed out of your account and redirected to the login
-              page.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer text-black">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleLogout}
-              className="bg-amber-600 hover:bg-amber-700 cursor-pointer"
-            >
-              {loading ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                "Logout"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="p-0 rounded-sm">
+          <div
+            className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+            onClick={() => setAlertOpen(false)}
+          />
+
+          <div className="relative bg-zinc-950  rounded-sm p-6 w-full ">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-black text-white uppercase tracking-tight mb-4">
+                Confirm Exit
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-zinc-500 text-sm font-medium mb-12 leading-relaxed">
+                You will be signed out of your current architectural
+                environment. Ensure all changes are committed to the cloud
+                registry.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="flex items-center justify-end gap-2">
+              <AlertDialogCancel className="text-[10px] rounded-sm text-zinc-600 hover:text-black transition-colors cursor-pointer">
+                Return
+              </AlertDialogCancel>
+
+              <AlertDialogAction
+                onClick={handleLogout}
+                className="px-10 py-5 bg-amber-500! hover:bg-amber-600 text-black text-[10px] hover:ring-0 rounded-sm transition-all flex items-center justify-center"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin h-4 w-4" />
+                ) : (
+                  "Sign Out"
+                )}
+              </AlertDialogAction>
+            </div>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>

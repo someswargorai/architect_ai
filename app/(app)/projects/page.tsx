@@ -149,7 +149,7 @@ export default function ProjectsSection() {
             {projects.map((project) => (
               <div
                 key={project._id}
-                className="group relative flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-sm border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
+                className="group relative flex  flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-sm border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
               >
                 {session.data && session.data.id === project.user && (
                   <div className="flex justify-between items-start mb-6">
@@ -195,7 +195,7 @@ export default function ProjectsSection() {
                       {project.progress || 0}%
                     </span>
                   </div>
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full flex-1 bg-white/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${project.progress || 0}%` }}
