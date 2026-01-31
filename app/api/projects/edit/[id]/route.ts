@@ -10,7 +10,7 @@ export async function POST(
   try {
     await connectDB();
     const { id } = await params;
-    const { name,description } = await req.json();
+    const { name, description, priority, appearance } = await req.json();
 
     const user = verifyToken(req);
     if (!user) {
@@ -18,10 +18,12 @@ export async function POST(
     }
 
     const response = await Project.findOneAndUpdate(
-      {_id:id, user: user.id},
+      { _id: id, user: user.id },
       {
-        name: name,
-        description: description
+        name,
+        description,
+        priority,
+        appearance,
       },
       {
         new: true,

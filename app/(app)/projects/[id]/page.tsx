@@ -12,6 +12,7 @@ import { EditNodeModal } from "@/app/components/dashboard/edit-node-modal";
 import { useParams } from "next/navigation";
 import http from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 
 const CanvasStudio = () => {
@@ -86,13 +87,17 @@ useEffect(() => {
 
     const saveDiagram = async () => {
       try {
-        await http.post(`/api/graphs/${projectId}`, { nodes, edges });
+        const response= await http.post(`/api/graphs/${projectId}`, { nodes, edges });
+
+        if(!response?.data?.success){
+          return toast.error(response?.data?.message);
+        }
       } catch (error) {
         console.error("Failed to save diagram:", error);
       }
     };
 
-    const timeout = setTimeout(saveDiagram, 10000);
+    const timeout = setTimeout(saveDiagram, 2000);
     return () => clearTimeout(timeout);
 
   }, [nodes, edges, projectId, isLoading]);

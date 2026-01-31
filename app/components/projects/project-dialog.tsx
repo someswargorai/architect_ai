@@ -20,9 +20,16 @@ import {
 } from "@/store/slices/projectSlice";
 import http from "@/lib/apiClient";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const projectSchema = yup.object({
   name: yup
@@ -35,6 +42,20 @@ const projectSchema = yup.object({
     .trim()
     .min(10, "Description must be at least 10 characters")
     .required("Description is required"),
+  priority: yup
+    .string()
+    .oneOf(
+      ["high", "medium", "low"],
+      "you have to select any of the values from high, medium, low",
+    )
+    .required("Priority is required"),
+  appearance: yup
+    .string()
+    .oneOf(
+      ["public", "private"],
+      "you have to select any of the values from public,  private",
+    )
+    .required("appearance is required"),
 });
 
 type ProjectFormValues = yup.InferType<typeof projectSchema>;
@@ -53,6 +74,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ProjectFormValues>({
@@ -68,7 +90,8 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
       description: data.description,
       createdAt: new Date().toISOString(),
       progress: "0",
-      priority: "Medium",
+      priority: data.priority || "Medium",
+      appearance:data.appearance
     };
 
     dispatch(addProjectOptimistic(optimisticProject));
@@ -91,37 +114,40 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="
-          bg-[#0B0F14]
-          text-white
-          border border-white/10
-          rounded-2xl
-          shadow-2xl
-          max-w-md
-        "
+    bg-[#0B0F14]
+    text-white
+    border border-white/10
+    rounded-2xl
+    shadow-xl
+    max-w-md
+  "
       >
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            Create New Project
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">
+            New Project
           </DialogTitle>
           <p className="text-sm text-gray-400">
-            Organize and track your next big idea
+            Set up your project details to get started.
           </p>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
           {/* Project Name */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-300">
+              Project name
+            </label>
             <Input
-              placeholder="Project name"
+              placeholder="e.g. AI Architecture Dashboard"
               {...register("name")}
               className="
-                bg-[#121821]
-                border-white/10
-                text-white
-                placeholder:text-gray-500
-                focus-visible:ring-1
-                focus-visible:ring-amber-400
-              "
+            bg-[#121821]
+            border-white/10
+            text-white
+            placeholder:text-gray-500
+            focus-visible:ring-1
+            focus-visible:ring-amber-400
+          "
             />
             {errors.name && (
               <p className="text-xs text-red-400">{errors.name.message}</p>
@@ -129,20 +155,23 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
           </div>
 
           {/* Description */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-300">
+              Description
+            </label>
             <Textarea
-              placeholder="Project description"
+              placeholder="Briefly describe what this project is about..."
               {...register("description")}
               className="
-                bg-[#121821]
-                border-white/10
-                text-white
-                placeholder:text-gray-500
-                resize-none
-                min-h-[90px]
-                focus-visible:ring-1
-                focus-visible:ring-amber-400
-              "
+            bg-[#121821]
+            border-white/10
+            text-white
+            placeholder:text-gray-500
+            resize-none
+            min-h-[90px]
+            focus-visible:ring-1
+            focus-visible:ring-amber-400
+          "
             />
             {errors.description && (
               <p className="text-xs text-red-400">
@@ -151,43 +180,76 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
             )}
           </div>
 
+          {/* Priority */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-300">
+              Priority
+            </label>
+            <Controller
+              name="priority"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full bg-[#121821] border-white/10">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">🔥 High</SelectItem>
+                    <SelectItem value="medium">⚡ Medium</SelectItem>
+                    <SelectItem value="low">🧊 Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.priority && (
+              <p className="text-xs text-red-400">{errors.priority.message}</p>
+            )}
+          </div>
+
+          {/* Appearance */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-300">
+              Visibility
+            </label>
+            <Controller
+              name="appearance"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full bg-[#121821] border-white/10">
+                    <SelectValue placeholder="Who can see this project?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">🌍 Public</SelectItem>
+                    <SelectItem value="private">🔒 Private</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.appearance && (
+              <p className="text-xs text-red-400">
+                {errors.appearance.message}
+              </p>
+            )}
+          </div>
+
+          {/* Footer */}
           <DialogFooter className="pt-4">
             <Button
               type="submit"
               disabled={isSubmitting}
               className="
-                w-full
-                bg-amber-400
-                text-black
-                hover:bg-amber-300
-                font-medium
-                rounded-sm
-                disabled:opacity-60
-                cursor-pointer
-              "
+            w-full
+            bg-amber-400
+            text-black
+            hover:bg-amber-300
+            font-medium
+            rounded-md
+            transition
+            disabled:opacity-60
+          "
             >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
-                    />
-                  </svg>
-                </span>
-              ) : (
-                "Create Project"
-              )}
+              {isSubmitting ? "Creating project…" : "Create project"}
             </Button>
           </DialogFooter>
         </form>

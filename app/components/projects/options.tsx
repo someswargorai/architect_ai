@@ -10,16 +10,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditProject from "./edit-project";
 import { DeleteProject } from "./delete-project";
+import { useState } from "react";
+import { UserMultiSelectDialog } from "./invite-member";
 
 interface ProjectActionsProps {
   name: string;
   id: string;
   description: string;
+  priority: "high" | "medium" | "low";
+  appearance: "public" | "private";
 }
 
-export function ProjectActions({ name, id, description }: ProjectActionsProps) {
+export function ProjectActions({
+  name,
+  id,
+  description,
+  priority,
+  appearance,
+}: ProjectActionsProps) {
+
+  const [dropdownOpen, setDropDownOpen]=useState(false);
+  const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={dropdownOpen} onOpenChange={setDropDownOpen}>
       <DropdownMenuTrigger asChild>
         <button
           className="
@@ -67,7 +81,14 @@ export function ProjectActions({ name, id, description }: ProjectActionsProps) {
             focus:text-amber-400
           "
         >
-          <EditProject name={name} id={id} description={description}/>
+          <EditProject
+            name={name}
+            id={id}
+            description={description}
+            priority={priority}
+            appearance={appearance}
+            setDropDownOpen={setDropDownOpen}
+          />
         </DropdownMenuItem>
 
         {/* Divider */}
@@ -89,7 +110,29 @@ export function ProjectActions({ name, id, description }: ProjectActionsProps) {
             focus:text-amber-400
           "
         >
-          <DeleteProject id={id}/>
+          <DeleteProject id={id} />
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          className="
+            flex items-center gap-2
+            rounded-lg
+            px-3 py-2
+            text-zinc-300
+            cursor-pointer
+            transition-colors
+            hover:bg-white/5
+            hover:text-amber-400
+            focus:bg-white/5
+            focus:text-amber-400
+          "
+        >
+          <UserMultiSelectDialog
+            id={id}
+            inviteMemberOpen={inviteMemberOpen}
+            setInviteMemberOpen={setInviteMemberOpen}
+          />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

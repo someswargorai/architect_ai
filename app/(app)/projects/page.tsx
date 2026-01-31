@@ -26,10 +26,12 @@ export default function ProjectsSection() {
   const [isLoading, setIsLoading] = useState(true);
   const projects = useAppSelector((state) => state.project.projects);
   const dispatch = useAppDispatch();
-  const { status } = useSession();
+  const { status} = useSession();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const debounceRef = useRef<NodeJS.Timeout>(null);
+  const session = useSession() as { data?: { id?: string } };
+
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -149,10 +151,18 @@ export default function ProjectsSection() {
                 key={project._id}
                 className="group relative flex flex-col p-6 bg-zinc-900/40 backdrop-blur-xl rounded-sm border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 transition-all duration-300 cursor-pointer overflow-hidden shadow-2xl"
               >
-                <div className="flex justify-between items-start mb-6">
-                  <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors"></div>
-                  <ProjectActions name={project.name} id={project._id} description={project.description}/>
-                </div>
+                {session.data && session.data.id === project.user && (
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors"></div>
+                    <ProjectActions
+                      name={project.name}
+                      id={project._id}
+                      description={project.description}
+                      priority={project.priority}
+                      appearance={project.appearance}
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2 mb-6">
                   <div className="flex items-center justify-between">
@@ -198,9 +208,9 @@ export default function ProjectsSection() {
                     <div
                       className={cn(
                         "size-1.5 rounded-full",
-                        project.priority === "High"
+                        project.priority === "high"
                           ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-                          : project.priority === "Completed"
+                          : project.priority === "medium"
                           ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                           : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]",
                       )}
@@ -212,7 +222,7 @@ export default function ProjectsSection() {
 
                   <div className="flex items-center gap-x-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">
                     <Bookmark className="size-3" />
-                    Private
+                    {project.appearance}
                   </div>
                 </div>
 

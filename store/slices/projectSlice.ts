@@ -1,13 +1,14 @@
-
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Project {
-  _id: string; 
+  _id: string;
+  user?:string;
   name: string;
-  description:string;
+  description: string;
+  appearance: "public" | "private";
   createdAt: string;
   progress: string;
-  priority: string;
+  priority: "high" | "medium" | "low";
 }
 
 interface ProjectsState {
@@ -40,26 +41,23 @@ const projectsSlice = createSlice({
       );
       if (project) project._id = action.payload.realId;
     },
-    editProject(state, action){
-      const id= action.payload._id;
-      const project= state.projects.find((item)=>item._id===id);
-      
-      if(project){
-        Object.assign(project, action.payload)
-      }
+    editProject(state, action) {
+      const id = action.payload._id;
+      const project = state.projects.find((item) => item._id === id);
 
+      if (project) {
+        Object.assign(project, action.payload);
+      }
     },
-   
   },
 });
 
 export const {
-         setProjects,
-         addProjectOptimistic,
-         removeProject,
-         updateProjectId,
-         editProject,
-       
-       } = projectsSlice.actions;
+  setProjects,
+  addProjectOptimistic,
+  removeProject,
+  updateProjectId,
+  editProject,
+} = projectsSlice.actions;
 
 export default projectsSlice.reducer;

@@ -21,35 +21,57 @@ import { useAppDispatch } from "@/store/hook/hook";
 import { Pencil } from "lucide-react";
 import { Loader } from "@/components/Loader";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Controller } from "react-hook-form";
 
-const schema = yup
-  .object({
-    name: yup
-      .string()
-      .required("Project name is required")
-      .min(2, "Name must be at least 2 characters")
-      .max(100, "Name must be at most 100 characters"),
+const schema = yup.object({
+  name: yup
+    .string()
+    .required("Project name is required")
+    .min(2)
+    .max(100),
 
-    description: yup
-      .string()
-      .required("Project description is required")
-      .min(50, "Description must be at least 50 characters")
-      .max(500, "Description must be at most 500 characters"),
-  })
-  .required();
+  description: yup
+    .string()
+    .required("Project description is required")
+    .min(50)
+    .max(500),
+
+  priority: yup
+    .string()
+    .oneOf(["high", "medium", "low"])
+    .required("Priority is required"),
+
+  appearance: yup
+    .string()
+    .oneOf(["public", "private"])
+    .required("Visibility is required"),
+});
 
 type EditProjectFormData = yup.InferType<typeof schema>;
 
 interface EditProjectProps {
-  name: string;
   id: string;
+  name: string;
   description: string;
+  priority: "high" | "medium" | "low";
+  appearance: "public" | "private";
+  setDropDownOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function EditProject({
   name,
   id,
   description,
+  priority,
+  appearance,
+  setDropDownOpen,
 }: EditProjectProps) {
   const [open, setOpen] = useState(false);
   const dispatch = useAppDispatch();
@@ -57,13 +79,16 @@ export default function EditProject({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<EditProjectFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      name: name || "",
-      description: description || "",
+      name,
+      description,
+      priority,
+      appearance,
     },
   });
 
@@ -72,6 +97,8 @@ export default function EditProject({
       const response = await http.post(`/api/projects/edit/${id}`, {
         name: data.name,
         description: data.description,
+        priority: data.priority,
+        appearance: data.appearance,
       });
 
       if (!response?.data?.success) {
@@ -81,6 +108,7 @@ export default function EditProject({
       dispatch(editProject(response?.data?.response));
       toast.success(response?.data?.message);
       setOpen(false);
+      setDropDownOpen(false);
       reset();
     } catch (err) {
       console.error("Failed to update project name:", err);
@@ -179,6 +207,59 @@ export default function EditProject({
                 {errors.description.message}
               </p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Priority */}
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-sm">Priority</Label>
+              <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="bg-black border-zinc-800 w-full">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">🔥 High</SelectItem>
+                      <SelectItem value="medium">⚡ Medium</SelectItem>
+                      <SelectItem value="low">🧊 Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.priority && (
+                <p className="text-xs text-red-400">
+                  {errors.priority.message}
+                </p>
+              )}
+            </div>
+
+            {/* Visibility */}
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-sm">Visibility</Label>
+              <Controller
+                name="appearance"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="bg-black border-zinc-800 w-full">
+                      <SelectValue placeholder="Who can see this?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">🌍 Public</SelectItem>
+                      <SelectItem value="private">🔒 Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.appearance && (
+                <p className="text-xs text-red-400">
+                  {errors.appearance.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <DialogFooter className="gap-2">

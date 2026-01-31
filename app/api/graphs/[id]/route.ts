@@ -3,6 +3,7 @@ import { connectDB } from "@/app/lib/mongodb";
 import graph from "@/app/models/graph";
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
+import Project from "@/app/models/project";
 
 export const verifyToken = (req: NextRequest): JwtPayload | null => {
   const authHeader = req.headers.get("Authorization");
@@ -22,7 +23,7 @@ export const verifyToken = (req: NextRequest): JwtPayload | null => {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }, 
+  { params }: { params: Promise<{ id: string }> },
 ) {
   await connectDB();
 
@@ -34,24 +35,33 @@ export async function GET(
   }
 
   try {
-    const project = await graph
-      .findOne({
-        projectId: projectId,
-        owner: user.id,
-      })
-      .select("nodes edges");
+    const project = await Project.findById(projectId);
 
     if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const isOwner = project.user.equals(user.id);
+    const isPermitted = project.permissbleArray?.includes(user.id);
+    const isPublic = project.appearance === "public";
+
+    const canSee = isOwner || isPermitted || isPublic;
+
+    if (!canSee) {
       return NextResponse.json(
-        { success: true, message: "Project not found" },
-        { status: 200 },
+        { error: "You are not allowed to view this project" },
+        { status: 403 },
       );
     }
 
+    const projectGraph = await graph
+      .findOne({ projectId })
+      .select("nodes edges");
+
     return NextResponse.json({
       success: true,
-      nodes: project.nodes || [],
-      edges: project.edges || [],
+      nodes: projectGraph?.nodes || [],
+      edges: projectGraph?.edges || [],
     });
   } catch (error) {
     console.error("Error loading diagram:", error);
@@ -66,10 +76,25 @@ export async function POST(
   await connectDB();
 
   const { id: projectId } = await params;
-  
+
   const user = verifyToken(req);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userIsAllowedToChangeTheGraph = await Project.findById(projectId);
+
+  const canEdit =
+    userIsAllowedToChangeTheGraph?.user?.equals(user.id) ||
+    userIsAllowedToChangeTheGraph?.permissbleArray?.includes(user.id);
+
+  if (!canEdit) {
+    return NextResponse.json(
+      { message: "You are not allowed to edit this project", success: false },
+      {
+        status: 200,
+      },
+    );
   }
 
   try {
@@ -80,7 +105,7 @@ export async function POST(
     }
 
     const graphResponse = await graph.findOneAndUpdate(
-      { projectId: projectId, owner: user.id },
+      { projectId: projectId },
       {
         nodes,
         edges,

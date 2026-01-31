@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
 import jwt from "jsonwebtoken";
-
-
+import mongoose from "mongoose";
 
 connectDB();
 
@@ -29,40 +28,48 @@ const verifyToken = (req: NextRequest): JwtPayload | null => {
   }
 };
 
-  export async function GET(req: NextRequest) {
-    const user = verifyToken(req);
-    const search = req.nextUrl.searchParams.get("search");
+export async function GET(req: NextRequest) {
+  const user = verifyToken(req);
+  const search = req.nextUrl.searchParams.get("search");
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    try {
-      const query: {
-        user: string;
-        name?: { $regex: string; $options: string };
-      } = { user: user.id };
-
-      if (search) {
-        query.name = {
-          $regex: search,
-          $options: "i",
-        };
-      }
-
-      const projects = await Project.find(query).sort({
-        createdAt: -1,
-      });
-
-      return NextResponse.json(projects, { status: 200 });
-    } catch (err) {
-      console.error(err);
-      return NextResponse.json(
-        { error: "Failed to fetch projects" },
-        { status: 500 },
-      );
-    }
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const userObjectId= new mongoose.Types.ObjectId(user.id);
+  try {
+    const query: {
+      $or: (
+        | { user: mongoose.Types.ObjectId }
+        | { permissbleArray: mongoose.Types.ObjectId }
+      )[];
+      name?: { $regex: string; $options: string };
+    } = { $or: [{ user: userObjectId }, { permissbleArray: userObjectId }] };
+
+    if (search) {
+      query.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    console.log(query);
+
+    const projects = await Project.find(query).sort({
+      createdAt: -1,
+    });
+
+    console.log(projects);
+
+    return NextResponse.json(projects, { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { error: "Failed to fetch projects" },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(req: NextRequest) {
   const user = verifyToken(req);
@@ -73,16 +80,21 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, description } = body;
+    const { name, description, priority, appearance } = body;
 
     if (!name && !description) {
-      return NextResponse.json({ error: "Name and Description is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Name and Description is required" },
+        { status: 400 },
+      );
     }
 
     const project = await Project.create({
       user: user.id,
-      name: name,
-      description: description,
+      name,
+      description,
+      priority,
+      appearance,
     });
 
     return NextResponse.json(project, { status: 201 });
