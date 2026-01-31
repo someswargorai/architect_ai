@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "../graphs/[id]/route";
 import Project from "@/app/models/project";
 import axios from "axios";
+import nodemailer from "nodemailer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,10 +18,13 @@ export async function POST(req: NextRequest) {
         $set: { permissbleArray: [] },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: "All members removed",
-      },{status:200});
+      return NextResponse.json(
+        {
+          success: true,
+          message: "All members removed",
+        },
+        { status: 200 },
+      );
     }
 
     const project = await Project.findById(id);
@@ -42,32 +46,33 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    await Project.findByIdAndUpdate(id, {
-      $addToSet: {
-        permissbleArray: { $each: newUsers.map((u: { _id: string }) => u._id) },
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      port: 587,
+      auth: {
+        user: "somgorai726@gmail.com",
+        pass: "jbpg sxbz rxls epxm",
       },
     });
 
-    // ----- SEND EMAILS -----
-    // const transporter = nodemailer.createTransport({
-    //   host: process.env.SMTP_HOST,
-    //   port: Number(process.env.SMTP_PORT),
-    //   auth: {
-    //     user: process.env.SMTP_USER,
-    //     pass: process.env.SMTP_PASS,
-    //   },
-    // });
+    const mailPromises = newUsers.map((u: { email: string }) =>
+      transporter.sendMail({
+        from: `somgorai726@gmail.com`,
+        to: u.email,
+        subject: `You are invited to a project!`,
+        text: `Hello,\n\nYou have been added to the project "${project.name}". Please check your dashboard to view the project.\n\nBest regards,\nTeam`,
+      }),
+    );
 
-    // const mailPromises = newUsers.map((u: { email: string }) =>
-    //   transporter.sendMail({
-    //     from: `"Project Manager" <${process.env.SMTP_USER}>`,
-    //     to: u.email,
-    //     subject: `You are invited to a project!`,
-    //     text: `Hello,\n\nYou have been added to the project "${project.name}". Please check your dashboard to view the project.\n\nBest regards,\nTeam`,
-    //   }),
-    // );
+    await Promise.all(mailPromises);
 
-    // await Promise.all(mailPromises);
+    await Project.findByIdAndUpdate(id, {
+      $addToSet: {
+        permissbleArray: {
+          $each: newUsers.map((u: { _id: string }) => u._id),
+        },
+      },
+    });
 
     return NextResponse.json({
       message: "Members added and emails sent successfully",

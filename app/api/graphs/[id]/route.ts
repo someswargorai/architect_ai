@@ -84,9 +84,7 @@ export async function POST(
 
   const userIsAllowedToChangeTheGraph = await Project.findById(projectId);
 
-  const canEdit =
-    userIsAllowedToChangeTheGraph?.user?.equals(user.id) ||
-    userIsAllowedToChangeTheGraph?.permissbleArray?.includes(user.id);
+  const canEdit = userIsAllowedToChangeTheGraph?.user?.equals(user.id) 
 
   if (!canEdit) {
     return NextResponse.json(
