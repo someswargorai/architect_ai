@@ -12,7 +12,6 @@ import {
   Bookmark,
   Calendar,
   Filter,
-  MoreHorizontal,
   Plus,
   Search,
 } from "lucide-react";
@@ -152,17 +151,10 @@ export default function ProjectsSection() {
               >
                 <div className="flex justify-between items-start mb-6">
                   <div className="px-3 py-1 rounded-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-amber-500 transition-colors"></div>
-                  <ProjectActions
-                    onEdit={() => {
-                      console.log("Edit project", project._id);
-                    }}
-                    onDelete={() => {
-                      console.log("Delete project", project._id);
-                    }}
-                  />
+                  <ProjectActions name={project.name} id={project._id} description={project.description}/>
                 </div>
 
-                <div className="space-y-1 mb-6">
+                <div className="space-y-2 mb-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-zinc-100 group-hover:text-white transition-colors tracking-tight truncate pr-4">
                       {project.name}
@@ -172,6 +164,14 @@ export default function ProjectsSection() {
                       onClick={() => router.push(`/projects/${project._id}`)}
                     />
                   </div>
+
+                  {/* Description */}
+                  {project.description && (
+                    <p className="text-xs leading-relaxed text-zinc-500 line-clamp-2 group-hover:text-zinc-400 transition-colors">
+                      {project.description}
+                    </p>
+                  )}
+
                   <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-zinc-600">
                     <Calendar className="size-3 mr-1.5" />
                     Started {new Date(project.createdAt).toLocaleDateString()}

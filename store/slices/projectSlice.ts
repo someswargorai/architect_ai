@@ -1,9 +1,10 @@
-// store/slices/projectsSlice.ts
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Project {
-  _id?: string; // will come from MongoDB
+  _id: string; 
   name: string;
+  description:string;
   createdAt: string;
   progress: string;
   priority: string;
@@ -25,7 +26,6 @@ const projectsSlice = createSlice({
       state.projects = action.payload;
     },
     addProjectOptimistic(state, action: PayloadAction<Project>) {
-      // add project immediately for optimistic UI
       state.projects.unshift(action.payload);
     },
     removeProject(state, action: PayloadAction<string>) {
@@ -35,20 +35,31 @@ const projectsSlice = createSlice({
       state,
       action: PayloadAction<{ tempId: string; realId: string }>,
     ) {
-      // Replace temporary id with real MongoDB _id
       const project = state.projects.find(
         (p) => p._id === action.payload.tempId,
       );
       if (project) project._id = action.payload.realId;
     },
+    editProject(state, action){
+      const id= action.payload._id;
+      const project= state.projects.find((item)=>item._id===id);
+      
+      if(project){
+        Object.assign(project, action.payload)
+      }
+
+    },
+   
   },
 });
 
 export const {
-  setProjects,
-  addProjectOptimistic,
-  removeProject,
-  updateProjectId,
-} = projectsSlice.actions;
+         setProjects,
+         addProjectOptimistic,
+         removeProject,
+         updateProjectId,
+         editProject,
+       
+       } = projectsSlice.actions;
 
 export default projectsSlice.reducer;

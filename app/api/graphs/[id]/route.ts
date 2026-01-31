@@ -4,7 +4,7 @@ import graph from "@/app/models/graph";
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 
-const verifyToken = (req: NextRequest): JwtPayload | null => {
+export const verifyToken = (req: NextRequest): JwtPayload | null => {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return null;
 
@@ -22,7 +22,7 @@ const verifyToken = (req: NextRequest): JwtPayload | null => {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }, 
 ) {
   await connectDB();
 
@@ -65,9 +65,9 @@ export async function POST(
 ) {
   await connectDB();
 
-  const user = verifyToken(req);
   const { id: projectId } = await params;
-
+  
+  const user = verifyToken(req);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

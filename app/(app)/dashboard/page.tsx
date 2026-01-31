@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ProjectDialog } from "@/app/components/projects/project-dialog";
+
 
 interface Project {
   _id: string;
@@ -19,6 +21,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
+  const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([
     {
       _id: "1",
@@ -56,7 +59,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-inter">
-     
       <div className="container mx-auto p-8 space-y-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
@@ -84,7 +86,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            onClick={onLaunchEditor}
+            onClick={() => setOpen(true)}
             className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black uppercase tracking-widest rounded-sm shadow-[0_10px_30px_rgba(245,158,11,0.2)] transition-all flex items-center gap-3 group"
           >
             <svg
@@ -201,7 +203,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
                 />
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -264,6 +265,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
           </div>
         )}
       </AnimatePresence>
+
+      <ProjectDialog open={open} onOpenChange={setOpen} />
     </div>
   );
 };
