@@ -16,7 +16,7 @@ type AddNodeSheetContentProps = {
   setNodeName: (value: string) => void;
   nodeDesc: string;
   setNodeDesc: (value: string) => void;
-  onSave: () => void;
+  onSave: (() => void) | undefined;
   onCancel: () => void;
 };
 
@@ -32,7 +32,7 @@ const AddNodeSheetContent: React.FC<AddNodeSheetContentProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onSave();
+      if(onSave) onSave();
     }
   };
   return (

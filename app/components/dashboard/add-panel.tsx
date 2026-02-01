@@ -11,7 +11,9 @@ import AICreateNodeSheetContent from "./ai-nodes-generatos";
 import { useDispatch } from "react-redux";
 import { addNode } from "@/store/slices/flowSlice";
 
-const AddNodePanel = () => {
+const AddNodePanel = ({canEdit}:{
+  canEdit: boolean
+}) => {
   const { setNodes, getViewport } = useReactFlow();
   const [nodeName, setNodeName] = useState("");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -91,7 +93,7 @@ const AddNodePanel = () => {
             setNodeName={setNodeName}
             nodeDesc={nodeDesc}
             setNodeDesc={setNodeDesc}
-            onSave={addNodeFn}
+            onSave={canEdit ? addNodeFn : undefined}
             onCancel={() => setIsSheetOpen(false)}
           />
         ) : (

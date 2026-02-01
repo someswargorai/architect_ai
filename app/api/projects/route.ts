@@ -3,6 +3,7 @@ import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Liveblocks } from "@liveblocks/node";
 
 connectDB();
 
@@ -66,6 +67,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const liveblocks = new Liveblocks({
+  secret: process.env.LIVEBLOCK_SECRET_KEY!
+});
+
 export async function POST(req: NextRequest) {
   const user = verifyToken(req);
 
@@ -83,7 +88,6 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-
     const project = await Project.create({
       user: user.id,
       name,
@@ -92,9 +96,18 @@ export async function POST(req: NextRequest) {
       appearance,
     });
 
+    const projectId = project._id.toString();
+    await liveblocks.createRoom(projectId, {
+      defaultAccesses: ["room:read", "room:presence:write"],
+      usersAccesses: {
+        [user.id]: ["room:write"],
+      },
+    });
+
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
-    console.error(err);
+    console.error("Error creating project or Liveblocks room:", err);
+
     return NextResponse.json(
       { error: "Failed to create project" },
       { status: 500 },

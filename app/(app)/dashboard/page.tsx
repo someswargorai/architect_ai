@@ -70,7 +70,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
           return toast.error(response?.data?.message);
         }
 
-        console.log(response?.data?.projects);;
         setRecentlyAddedArchitectures(response?.data?.projects);
       } catch (err) {
         if (axios.isAxiosError(err)) {
