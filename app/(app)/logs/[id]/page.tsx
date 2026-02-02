@@ -108,7 +108,7 @@ export default function ActivityLogsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] uppercase font-bold tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] uppercase font-bold tracking-widest mb-4">
             <Database className="w-3 h-3" /> System Audit
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-3">

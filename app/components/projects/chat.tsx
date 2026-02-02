@@ -132,6 +132,9 @@ export default function Chat() {
                       Discuss about bottlenecks, security hardening, or cost
                       optimizations for your current layout.
                     </p>
+                    <p className="text-[12px] text-slate-500 max-w-60 leading-relaxed font-medium">
+                      Note: chats are not persisted.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2 pb-6">

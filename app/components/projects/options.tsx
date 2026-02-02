@@ -83,7 +83,7 @@ export function ProjectActions({
           "
         >
           <span onClick={() => router.push(`/projects/settings/${id}`)} className="flex gap-1 items-center">
-            <Settings /> Settings
+            <Settings /> Access Controls
           </span>
         </DropdownMenuItem>
 

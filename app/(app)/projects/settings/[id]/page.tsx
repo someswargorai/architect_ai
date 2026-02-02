@@ -137,11 +137,7 @@ export default function ProjectMembersPage() {
             access with surgical precision.
           </p>
         </div>
-        {/* <button className="group relative flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-black px-6 py-3 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(249,115,22,0.3)]">
-          <UserPlus className="w-5 h-5" />
-          Add Member
-          <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-        </button> */}
+      
       </div>
 
       <div className="relative group">
@@ -257,7 +253,7 @@ export default function ProjectMembersPage() {
                               <Edit3 className="w-3 h-3" /> Full Editor
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-[8px] font-bold uppercase">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-orange-400 text-[8px] font-bold uppercase">
                               <Eye className="w-3 h-3" /> View Only
                             </span>
                           )}
