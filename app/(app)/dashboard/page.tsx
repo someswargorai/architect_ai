@@ -117,7 +117,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor }) => {
   const sessionUser = { name: "Architect One" };
   
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-inter">
+    <div className="h-[calc(100vh-80px)] overflow-y-auto bg-[#050505] text-white font-inter">
       <div className="container mx-auto p-8 space-y-12">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
