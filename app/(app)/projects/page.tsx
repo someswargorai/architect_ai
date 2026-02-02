@@ -3,7 +3,6 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hook/hook";
 import { setProjects } from "@/store/slices/projectSlice";
-import { Button } from "@/components/ui/button";
 import { ProjectDialog } from "@/app/components/projects/project-dialog";
 import http from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
@@ -11,7 +10,6 @@ import {
   ArrowUpRight,
   Bookmark,
   Calendar,
-  Filter,
   Plus,
   Search,
 } from "lucide-react";
@@ -20,6 +18,14 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectActions } from "@/app/components/projects/options";
 import { Input } from "@/components/ui/input";
+import FilterModal from "@/app/components/projects/filter";
+
+
+export interface Form{
+    priority: "medium" | "high" | "low" | undefined,
+    startDate: Date | undefined ,
+    appearance: "public" | "private" | undefined,
+}
 
 export default function ProjectsSection() {
   const [open, setOpen] = useState(false);
@@ -31,7 +37,12 @@ export default function ProjectsSection() {
   const [search, setSearch] = useState("");
   const debounceRef = useRef<NodeJS.Timeout>(null);
   const session = useSession() as { data?: { id?: string } };
-
+  const [form, setForm] = useState<Form>({
+    priority: undefined,
+    startDate: undefined,
+    appearance: undefined,
+  });
+  const [refetch, setRefetch]= useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -39,7 +50,7 @@ export default function ProjectsSection() {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        const res = await http.get(`/api/projects?search=${search}`);
+        const res = await http.get(`/api/projects?search=${search}&form=${JSON.stringify(form)}`);
         dispatch(setProjects(res?.data));
       } catch (error) {
         console.error("Failed to fetch projects:", error);
@@ -49,7 +60,7 @@ export default function ProjectsSection() {
     };
 
     fetchProjects();
-  }, [dispatch, status, search]);
+  }, [dispatch, status, search, refetch]);
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -93,15 +104,13 @@ export default function ProjectsSection() {
               disabled={isLoading}
             />
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-white/5 bg-zinc-900/50 h-10 px-4"
-            disabled={isLoading}
-          >
-            <Filter className="size-4 mr-2 text-zinc-400" />
-            Filter
-          </Button>
+
+          <FilterModal
+            form={form}
+            setForm={setForm}
+            setRefetch={setRefetch}
+            isLoading={isLoading}
+          />
         </div>
       </div>
 

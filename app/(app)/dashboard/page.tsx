@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ProjectDialog } from "@/app/components/projects/project-dialog";
 import http from "@/lib/apiClient";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor }) => {
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([
     {
@@ -52,13 +52,44 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
       priority: "High",
     },
   ]);
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentlyAddedArchitures, setRecentlyAddedArchitectures] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(true);
-  const {status} =  useSession();
+  const { status } = useSession();
+  interface DashboardMetrics {
+    totalGraphs: number;
+    totalCollaborators: number;
+    highPriority: Project[];
+    projectsTimeline: {
+      _id: { year: number; month: number; week: number };
+      count: number;
+    }[];
+  }
 
   useEffect(() => {
-    if(status!=="authenticated") return;
+    if (status !== "authenticated") return;
+
+    const fetchDashboardMetrics = async () => {
+      try {
+        const res = await http.get("/api/dashboard/metrices");
+        if (!res?.data?.success) {
+          toast.error("Failed to load dashboard metrics");
+          return;
+        }
+
+        setMetrics(res.data.data);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          toast.error(err.response?.data?.message || "Something went wrong");
+        }
+      }
+    };
+
+    fetchDashboardMetrics();
+  }, [status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
 
     const fetchRecentlyInvitedArchitectures = async () => {
       try {
@@ -83,16 +114,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
     fetchRecentlyInvitedArchitectures();
   }, [status]);
 
-  // Mocked session data
   const sessionUser = { name: "Architect One" };
-
-  const recentProjects = projects.slice(0, 5);
-  const starredProjects = projects.filter((p) => p.priority === "High");
-
+  
   return (
     <div className="min-h-screen bg-[#050505] text-white font-inter">
       <div className="container mx-auto p-8 space-y-12">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
             <motion.div
@@ -141,27 +167,34 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
         {/* Quick Stats */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Designs"
-            value={projects.length.toString()}
-            trend="+2 this week"
+            title="Total Graphs"
+            value={metrics ? metrics.totalGraphs.toString() : "—"}
+            trend="Owned graphs"
             icon="folder"
           />
           <StatCard
-            title="AI Operations"
-            value="142"
-            trend="Active compute"
+            title="Collaborators"
+            value={metrics ? metrics.totalCollaborators.toString() : "—"}
+            trend="Active contributors"
             icon="sparkle"
           />
           <StatCard
             title="High Priority"
-            value={starredProjects.length.toString()}
+            value={metrics ? metrics.highPriority.length.toString() : "—"}
             trend="Needs review"
             icon="star"
           />
+
           <StatCard
-            title="Deployment"
-            value="8"
-            trend="Live infrastructure"
+            title="Project"
+            value={
+              metrics
+                ? metrics.projectsTimeline
+                    .reduce((sum, p) => sum + p.count, 0)
+                    .toString()
+                : "—"
+            }
+            trend="Total projects"
             icon="cloud"
           />
         </div>
@@ -198,10 +231,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
               ) : (
                 <div className="space-y-2">
                   {recentlyAddedArchitures.map((project, index) => (
-                    <ProjectItem
-                      key={index}
-                      project={project}
-                    />
+                    <ProjectItem key={index} project={project} />
                   ))}
                 </div>
               )}
@@ -242,8 +272,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
     </div>
   );
 };
-
-// ── Helper Sub-Components (Themed) ──────────────────────────────
 
 function StatCard({
   title,
@@ -426,18 +454,14 @@ function QuickAction({
   );
 }
 
-function ProjectItem({
-  project,
-}: {
-  project: Project;
-}) {
+function ProjectItem({ project }: { project: Project }) {
   const date = new Date(project.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
   return (
     <Link
-     href={`/projects/${project._id}`}
+      href={`/projects/${project._id}`}
       className="p-5 flex items-center justify-between border-b border-white/5 last:border-0 hover:bg-zinc-900/50 transition-colors cursor-pointer group"
     >
       <div className="flex items-center gap-6">

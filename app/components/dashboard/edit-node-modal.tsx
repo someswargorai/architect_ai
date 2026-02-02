@@ -1,4 +1,3 @@
-// components/dashboard/EditNodeModal.tsx
 "use client";
 
 import React from "react";
@@ -20,8 +19,8 @@ interface EditNodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialLabel: string;
-  initialDescription?: string; // ← New: optional description
-  onSave: (newLabel: string, newDescription?: string) => void; // ← Updated signature
+  initialDescription?: string;
+  onSave: (newLabel: string, newDescription?: string) => void; 
 }
 
 export const EditNodeModal: React.FC<EditNodeModalProps> = ({

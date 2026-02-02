@@ -82,7 +82,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
     resolver: yupResolver(projectSchema),
   });
 
- const session = useSession() as { data?: { id?: string } };
+  const session = useSession() as { data?: { id?: string } };
 
   const onSubmit = async (data: ProjectFormValues) => {
     const tempId = uuidv4();
@@ -117,14 +117,12 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="
-    bg-[#0B0F14]
-    text-white
-    border border-white/10
-    rounded-2xl
-    shadow-xl
-    max-w-md
-  "
+        className="bg-[#0B0F14]
+        text-white
+        border border-white/10
+        rounded-2xl
+        shadow-xl
+        max-w-md"
       >
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold tracking-tight">

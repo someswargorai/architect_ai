@@ -56,7 +56,7 @@ const AddNodePanel = ({canEdit}:{
   };
 
   return (
-    <Panel position="top-left" className="flex flex-col gap-2">
+    <Panel position="top-left" className="flex flex-col gap-2 relative">
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
 
         <SheetTrigger asChild>

@@ -13,6 +13,12 @@ interface JwtPayload {
   name: string;
 }
 
+interface Form {
+  priority: "medium" | "high" | "low" | undefined;
+  startDate: Date | undefined;
+  appearance: "public" | "private" | undefined;
+}
+
 const verifyToken = (req: NextRequest): JwtPayload | null => {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return null;
@@ -32,12 +38,25 @@ const verifyToken = (req: NextRequest): JwtPayload | null => {
 export async function GET(req: NextRequest) {
   const user = verifyToken(req);
   const search = req.nextUrl.searchParams.get("search");
+  const formParam = req.nextUrl.searchParams.get("form");
+
+  let form: Partial<Form> = {};
+
+  if (formParam) {
+    const parsed = JSON.parse(formParam);
+
+    form = {
+      priority: parsed.priority,
+      appearance: parsed.appearance,
+      startDate: parsed.startDate ? new Date(parsed.startDate) : undefined,
+    };
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userObjectId= new mongoose.Types.ObjectId(user.id);
+  const userObjectId = new mongoose.Types.ObjectId(user.id);
   try {
     const query: {
       $or: (
@@ -45,6 +64,11 @@ export async function GET(req: NextRequest) {
         | { "permissbleArray.user": mongoose.Types.ObjectId }
       )[];
       name?: { $regex: string; $options: string };
+      appearance?: "public" | "private" | undefined;
+      priority?: "high" | "medium" | "low" | undefined;
+      createdAt?: {
+        $gte?: Date;
+      };
     } = {
       $or: [{ user: userObjectId }, { "permissbleArray.user": userObjectId }],
     };
@@ -54,7 +78,23 @@ export async function GET(req: NextRequest) {
         $regex: search,
         $options: "i",
       };
-    }  
+    }
+
+    if (form.appearance) {
+      query.appearance = form.appearance;
+    }
+
+    if (form.priority) {
+      query.priority = form.priority;
+    }
+
+    if(form.startDate){
+      const start = new Date(form.startDate);
+      query.createdAt = {
+        $gte: start,
+      };
+    }
+
     const projects = await Project.find(query).sort({
       createdAt: -1,
     });
@@ -70,7 +110,7 @@ export async function GET(req: NextRequest) {
 }
 
 const liveblocks = new Liveblocks({
-  secret: process.env.LIVEBLOCK_SECRET_KEY!
+  secret: process.env.LIVEBLOCK_SECRET_KEY!,
 });
 
 export async function POST(req: NextRequest) {

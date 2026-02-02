@@ -37,6 +37,7 @@ import {
 } from "@liveblocks/react";
 import ShowOnlines from "./show-onlines";
 import LiveCursors from "./live-cursor";
+import Chat from "./chat";
 
 const CanvasStudio = () => {
   const dispatch = useDispatch();
@@ -280,6 +281,7 @@ const onMouseLeave = useCallback(() => {
         <AddNodePanel canEdit={canEdit} />
         <ShowOnlines/>
         <LiveCursors/>
+        <Chat/>
       </ReactFlow>
 
       <EditNodeModal
