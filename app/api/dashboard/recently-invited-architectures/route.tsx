@@ -13,11 +13,9 @@ export async function GET(req: NextRequest) {
   const userObjectId= new mongoose.Types.ObjectId(user.id);
   try {
     const query: {
-      $or: (
-        | { user: mongoose.Types.ObjectId }
-        | { permissbleArray: mongoose.Types.ObjectId }
-      )[];
-    } = { $or: [{ user: userObjectId }, { permissbleArray: userObjectId }] };
+      "permissbleArray.user": mongoose.Types.ObjectId 
+    ;
+    } = {  "permissbleArray.user": userObjectId };
 
     const projects = await Project.find(query).sort({
       createdAt: -1,

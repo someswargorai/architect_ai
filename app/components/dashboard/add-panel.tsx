@@ -11,6 +11,7 @@ import AICreateNodeSheetContent from "./ai-nodes-generatos";
 import { useDispatch } from "react-redux";
 import { addNode } from "@/store/slices/flowSlice";
 
+
 const AddNodePanel = ({canEdit}:{
   canEdit: boolean
 }) => {
@@ -22,7 +23,6 @@ const AddNodePanel = ({canEdit}:{
   const dispatch = useDispatch();
 
   const [mode, setMode] = useState<CreateMode>("manual");
-
   const addNodeFn = () => {
     if (!nodeName.trim()) return;
 

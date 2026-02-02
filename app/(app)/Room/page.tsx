@@ -14,9 +14,12 @@ export default function Room({
   children: ReactNode;
   projectId: string;
 }) {
+
+  const userPresence = { cursor: null, isEditing: false };
+
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider id={`${projectId}`}>
+      <RoomProvider id={`${projectId}`} initialPresence={userPresence}>
         <ClientSideSuspense fallback={<div></div>}>
           {children}
         </ClientSideSuspense>

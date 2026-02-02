@@ -3,10 +3,13 @@ import { verifyToken } from "../graphs/[id]/route";
 import Project from "@/app/models/project";
 import axios from "axios";
 import nodemailer from "nodemailer";
+import User from "@/app/models/user";
 
 export async function POST(req: NextRequest) {
   try {
     const user = verifyToken(req);
+    const me = User.find(user?.id);
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -27,7 +30,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const project = await Project.findById(id);
+    const project = await Project.findById(id).populate(
+      "permissbleArray.user",
+      "email name",
+    );
+
     if (!project) {
       return NextResponse.json(
         { error: "Project not found", success: false },
@@ -35,9 +42,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (project.user.toString() !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+
     const newUsers = users.filter(
-      (u: { _id: string }) => !project.permissbleArray.includes(u._id),
+      (u: { _id: string }) =>
+        !project.permissbleArray.some(
+          (m) => m.user._id.toString() === u._id.toString(),
+        ),
     );
+
 
     if (newUsers.length === 0) {
       return NextResponse.json({
@@ -242,7 +258,10 @@ export async function POST(req: NextRequest) {
     await Project.findByIdAndUpdate(id, {
       $addToSet: {
         permissbleArray: {
-          $each: newUsers.map((u: { _id: string }) => u._id),
+          $each: newUsers.map((u: { _id: string }) => ({
+            user: u._id,
+            permission: "read",
+          })),
         },
       },
     });

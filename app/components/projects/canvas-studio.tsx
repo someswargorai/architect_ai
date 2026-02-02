@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import {
   useBroadcastEvent,
   useEventListener,
+  useOthers,
   useSelf,
   useUpdateMyPresence,
 } from "@liveblocks/react";
@@ -47,6 +48,8 @@ const CanvasStudio = () => {
   const [editedLabel, setEditedLabel] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
 
+  const editingTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const { id: projectId } = useParams();
   const { status } = useSession();
 
@@ -59,6 +62,31 @@ const CanvasStudio = () => {
 
   const updateMyPresence = useUpdateMyPresence();
  
+  const others = useOthers();
+
+  const someoneElseEditing = others.some(
+    (o) => o.presence?.isEditing
+  );
+
+  useEffect(() => {
+  if (someoneElseEditing && !canEdit) {
+    toast.info("Someone is editing the canvas right now");
+  }
+}, [someoneElseEditing, canEdit]);
+
+const markEditing = useCallback(() => {
+  updateMyPresence({ isEditing: true });
+
+  if (editingTimeout.current) {
+    clearTimeout(editingTimeout.current);
+  }
+
+  editingTimeout.current = setTimeout(() => {
+    updateMyPresence({ isEditing: false });
+  }, 1500);
+}, [updateMyPresence]);
+
+
   const onMouseMove = useCallback(
   (event: React.MouseEvent) => {
     updateMyPresence({
@@ -66,13 +94,14 @@ const CanvasStudio = () => {
         x: event.clientX,
         y: event.clientY,
       },
+   
     });
   },
   [updateMyPresence]
 );
 
 const onMouseLeave = useCallback(() => {
-  updateMyPresence({ cursor: null });
+  updateMyPresence({ cursor: null});
 }, [updateMyPresence]);
 
 
@@ -111,7 +140,8 @@ const onMouseLeave = useCallback(() => {
     loadDiagram();
   }, [dispatch, projectId, status]);
 
-    useEventListener(({ event }) => {
+    
+  useEventListener(({ event }) => {
 
     if (event && typeof event === "object" && "type" in event) {
         if (event.type === "FLOW_UPDATE") {
@@ -124,7 +154,7 @@ const onMouseLeave = useCallback(() => {
         }
         }
     }
-    });
+  });
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -140,9 +170,10 @@ const onMouseLeave = useCallback(() => {
         });
       }
 
+      markEditing();
       isRemoteUpdate.current = false;
     },
-    [nodes, edges, dispatch, broadcast, canEdit]
+    [nodes, edges, dispatch, broadcast, canEdit, markEditing]
   );
 
   const onEdgesChange = useCallback(
@@ -159,9 +190,10 @@ const onMouseLeave = useCallback(() => {
         });
       }
 
+      markEditing()
       isRemoteUpdate.current = false;
     },
-    [nodes, edges, dispatch, broadcast, canEdit]
+    [nodes, edges, dispatch, broadcast, markEditing, canEdit]
   );
 
   const onConnect = useCallback(
@@ -175,8 +207,10 @@ const onMouseLeave = useCallback(() => {
         type: "FLOW_UPDATE",
         payload: { nodes:JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(newEdges)), },
       });
+     
+      markEditing()
     },
-    [nodes, edges, dispatch, broadcast, canEdit]
+    [nodes, edges, dispatch, broadcast, canEdit,markEditing]
   );
 
   const onNodeDoubleClick = useCallback(

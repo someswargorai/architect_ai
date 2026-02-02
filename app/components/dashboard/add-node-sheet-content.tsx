@@ -104,7 +104,7 @@ const AddNodeSheetContent: React.FC<AddNodeSheetContentProps> = ({
       </div>
 
       <SheetFooter>
-        <div className="flex gap-3 justify-end w-full text-black">
+        <div className="flex gap-3 justify-end w-full text-black mb-10">
           <Button
             variant="outline"
             onClick={onCancel}

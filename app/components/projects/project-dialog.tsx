@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSession } from "next-auth/react";
 
 const projectSchema = yup.object({
   name: yup
@@ -81,17 +82,20 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
     resolver: yupResolver(projectSchema),
   });
 
+ const session = useSession() as { data?: { id?: string } };
+
   const onSubmit = async (data: ProjectFormValues) => {
     const tempId = uuidv4();
 
     const optimisticProject = {
       _id: tempId,
+      user: session.data && session?.data?.id,
       name: data.name,
       description: data.description,
       createdAt: new Date().toISOString(),
       progress: "0",
       priority: data.priority || "Medium",
-      appearance:data.appearance
+      appearance: data.appearance,
     };
 
     dispatch(addProjectOptimistic(optimisticProject));

@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -12,6 +12,8 @@ import EditProject from "./edit-project";
 import { DeleteProject } from "./delete-project";
 import { useState } from "react";
 import { UserMultiSelectDialog } from "./invite-member";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ProjectActionsProps {
   name: string;
@@ -28,9 +30,9 @@ export function ProjectActions({
   priority,
   appearance,
 }: ProjectActionsProps) {
-
-  const [dropdownOpen, setDropDownOpen]=useState(false);
+  const [dropdownOpen, setDropDownOpen] = useState(false);
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
+  const router= useRouter();
 
   return (
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropDownOpen}>
@@ -61,17 +63,56 @@ export function ProjectActions({
           rounded-xl
           border border-white/10
           bg-[#0b0b0b]
-          p-1
+          
           shadow-[0_20px_50px_rgba(0,0,0,0.8)]
         "
       >
-        {/* Edit */}
         <DropdownMenuItem
           onSelect={(e) => e.preventDefault()}
           className="
             flex items-center gap-2
             rounded-lg
-            px-3 py-2
+            px-6 py-3
+            text-zinc-300
+            cursor-pointer
+            transition-colors
+            hover:bg-white/5
+            hover:text-amber-400
+            focus:bg-white/5
+            focus:text-amber-400
+          "
+        >
+          <span onClick={() => router.push(`/projects/settings/${id}`)} className="flex gap-1 items-center">
+            <Settings /> Settings
+          </span>
+        </DropdownMenuItem>
+
+        <div className="my-1 h-px bg-white/5" />
+
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          className="
+            flex items-center gap-2
+            rounded-lg
+            px-3
+            text-zinc-300
+            cursor-pointer
+            transition-colors
+            hover:bg-white/5
+            hover:text-amber-400
+            focus:bg-white/5
+            focus:text-amber-400
+          "
+        >
+          <DeleteProject id={id} />
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          className="
+            flex items-center gap-2
+            rounded-lg
+            px-3
             text-zinc-300
             cursor-pointer
             transition-colors
@@ -91,34 +132,12 @@ export function ProjectActions({
           />
         </DropdownMenuItem>
 
-        {/* Divider */}
-        <div className="my-1 h-px bg-white/5" />
-
-        {/* Delete */}
         <DropdownMenuItem
           onSelect={(e) => e.preventDefault()}
           className="
             flex items-center gap-2
             rounded-lg
-            px-3 py-2
-            text-zinc-300
-            cursor-pointer
-            transition-colors
-            hover:bg-white/5
-            hover:text-amber-400
-            focus:bg-white/5
-            focus:text-amber-400
-          "
-        >
-          <DeleteProject id={id} />
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          onSelect={(e) => e.preventDefault()}
-          className="
-            flex items-center gap-2
-            rounded-lg
-            px-3 py-2
+            px-3
             text-zinc-300
             cursor-pointer
             transition-colors

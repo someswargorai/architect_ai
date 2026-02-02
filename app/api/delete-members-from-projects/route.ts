@@ -1,0 +1,68 @@
+import { connectDB } from "@/app/lib/mongodb";
+import Project from "@/app/models/project";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "../graphs/[id]/route";
+import mongoose from "mongoose";
+
+export async function POST(
+  req: NextRequest,
+) {
+  try {
+    await connectDB();
+
+    const currentUser = verifyToken(req);
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { userId, id: projectId } = await req.json();
+
+    console.log(projectId, userId);
+
+    if (!projectId || !userId) {
+      return NextResponse.json(
+        { error: "Missing project ID or user ID" },
+        { status: 400 },
+      );
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    if (project.user.toString() !== currentUser.id) {
+      return NextResponse.json(
+        { error: "Only the project owner can remove members" },
+        { status: 403 },
+      );
+    }
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
+      {
+        $pull: {
+          permissbleArray: { _id: new mongoose.Types.ObjectId(userId) },
+        },
+      },
+      { new: true },
+    );
+
+    if(!updatedProject){
+      return NextResponse.json(
+        { error: "Missing project ID or user ID" },
+        { status: 404 },
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: "User removed successfully",
+    });
+  } catch (err) {
+    console.error("DELETE member error:", err);
+    return NextResponse.json(
+      { error: "Server error", success: false },
+      { status: 500 },
+    );
+  }
+}

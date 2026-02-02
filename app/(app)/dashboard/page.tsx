@@ -192,7 +192,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor, onLogout }) => {
                     </svg>
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                    No active projects
+                    No invited projects
                   </p>
                 </div>
               ) : (

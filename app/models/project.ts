@@ -2,7 +2,11 @@ import mongoose, { Schema } from "mongoose";
 
 export interface IProject {
   user: mongoose.Types.ObjectId;
-  permissbleArray: mongoose.Types.ObjectId[];
+  permissbleArray: {
+    user: mongoose.Types.ObjectId;
+    permission: "read" | "write";
+    _id?: mongoose.Types.ObjectId; 
+  }[];
   name: string;
   description: string;
   priority: "high" | "medium" | "low";
@@ -13,7 +17,17 @@ export interface IProject {
 const ProjectSchema = new Schema<IProject>({
   user: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
-  permissbleArray: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  permissbleArray: [
+    {
+      user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      permission: {
+        type: String,
+        enum: ["read", "write"],
+        default: "read",
+        required: true,
+      },
+    },
+  ],
 
   name: { type: String, required: true },
 
@@ -36,7 +50,6 @@ const ProjectSchema = new Schema<IProject>({
   createdAt: { type: Date, default: Date.now },
 });
 
-const Project =
-  mongoose.models.Project || mongoose.model<IProject>("Project", ProjectSchema);
+const Project = mongoose.model<IProject>("Project", ProjectSchema);
 
 export default Project;

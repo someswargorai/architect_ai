@@ -8,6 +8,7 @@ export default function ShowOnlines() {
     <div className="fixed right-6 top-24 w-60 rounded-2xl border border-white/10 bg-neutral-900/80 backdrop-blur-xl shadow-2xl">
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-sm font-medium text-neutral-300">Online</span>
+
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400">
           {others.length + 1}
         </span>
@@ -21,7 +22,6 @@ export default function ShowOnlines() {
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </span>
             <span className="truncate">You</span>
-            <span className="ml-auto text-xs text-neutral-400">Owner</span>
           </div>
         )}
 
@@ -31,7 +31,9 @@ export default function ShowOnlines() {
             className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/5"
           >
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            <span className="truncate">{info?.email as string ?? "Anonymous"}</span>
+            <span className="truncate">
+              {(info?.email as string) ?? "Anonymous"}
+            </span>
           </div>
         ))}
       </div>

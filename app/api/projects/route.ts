@@ -42,10 +42,12 @@ export async function GET(req: NextRequest) {
     const query: {
       $or: (
         | { user: mongoose.Types.ObjectId }
-        | { permissbleArray: mongoose.Types.ObjectId }
+        | { "permissbleArray.user": mongoose.Types.ObjectId }
       )[];
       name?: { $regex: string; $options: string };
-    } = { $or: [{ user: userObjectId }, { permissbleArray: userObjectId }] };
+    } = {
+      $or: [{ user: userObjectId }, { "permissbleArray.user": userObjectId }],
+    };
 
     if (search) {
       query.name = {

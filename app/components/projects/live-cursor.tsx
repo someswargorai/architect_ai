@@ -6,11 +6,13 @@ export type Presence = {
   cursor?: { x: number; y: number } | null;
   name?: string;
   email?: string;
+  isEditing: boolean;
 };
 
 declare global {
   interface Liveblocks {
     Presence: Presence;
+    
   }
 }
 

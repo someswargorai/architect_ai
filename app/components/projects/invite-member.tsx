@@ -24,11 +24,16 @@ import { toast } from "sonner";
 import axios from "axios";
 import { Loader } from "@/components/Loader";
 
-export interface User {
+interface User {
   _id: string;
   email: string;
 }
 
+interface InvitedEntry {
+  user: User;
+  permission: string;
+  _id: string;
+}
 export function UserMultiSelectDialog({
   id,
   inviteMemberOpen,
@@ -79,7 +84,11 @@ export function UserMultiSelectDialog({
         return toast.error(response?.data?.message) || "Error fetching users";
       }
 
-      setSelected(response?.data?.users);
+       const invitedUsers = response.data.users.map(
+         (entry: InvitedEntry) => entry.user,
+       );
+
+      setSelected(invitedUsers);
     };
 
     if (inviteMemberOpen) {
@@ -174,10 +183,10 @@ export function UserMultiSelectDialog({
                 "
               >
                 {user.email}
-                <X
+                {/* <X
                   className="h-3 w-3 cursor-pointer opacity-70 hover:opacity-100"
                   onClick={() => toggleUser(user)}
-                />
+                /> */}
               </span>
             ))}
           </div>

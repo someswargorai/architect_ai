@@ -1,3 +1,6 @@
+import "./user";
+import "./project";
+
 import mongoose, { Schema } from "mongoose";
 
 export interface IUser {
@@ -25,19 +28,17 @@ const userSchema = new Schema<IUser>(
       required: true,
       minlength: 8,
     },
-    accessToken:{
+    accessToken: {
       type: String,
-      required: true
+      required: true,
     },
-    refreshToken:{
+    refreshToken: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   { timestamps: true },
 );
-
-
 
 const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
 
