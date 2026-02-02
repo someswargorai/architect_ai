@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   Building2,
   Sparkles,
+  DollarSignIcon,
 } from "lucide-react";
 
 export const SIDEBAR_ITEMS = [
@@ -22,10 +23,10 @@ export const SIDEBAR_ITEMS = [
         icon: Building2,
       },
       {
-        id: "ai-studio",
-        name: "Ask AI",
-        href: "/ai-studio",
-        icon: Sparkles,
+        id: "pricing",
+        name: "Pricing",
+        href: "/pricing",
+        icon: DollarSignIcon,
       },
     ],
   },

@@ -15,7 +15,6 @@ export default function AppSidebar() {
 
   return (
     <>
-      {/* ----------------- MOBILE SIDEBAR TRIGGER ----------------- */}
       <Sheet>
         <SheetTrigger asChild>
           <button className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-black/40 text-white hover:bg-black/60 transition">
@@ -26,7 +25,7 @@ export default function AppSidebar() {
           side="left"
           className="w-64 p-4 bg-black border-r border-white/5 flex flex-col gap-y-8 lg:hidden"
         >
-          {/* Brand Logo */}
+
           <div className="px-2 flex items-center gap-x-3 mb-2">
             <div className="size-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.2)]">
               <div className="size-4 bg-black rounded-sm rotate-45" />
@@ -36,7 +35,6 @@ export default function AppSidebar() {
             </span>
           </div>
 
-          {/* Sidebar Items */}
           {SIDEBAR_ITEMS.map((group) => (
             <div key={group.id} className="flex flex-col gap-y-1">
               {group.name && (
