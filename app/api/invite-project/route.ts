@@ -4,6 +4,7 @@ import Project from "@/app/models/project";
 import axios from "axios";
 import nodemailer from "nodemailer";
 import User from "@/app/models/user";
+import activity from "@/app/models/activity";
 
 export async function POST(req: NextRequest) {
   try {
@@ -252,8 +253,19 @@ export async function POST(req: NextRequest) {
     `,
       }),
     );
-
     await Promise.all(mailPromises);
+
+    await Promise.all(
+      newUsers.map((u: { email: string }) =>
+        activity.create({
+          projectId: id,
+          action:"INVITE",
+          log: `${u.email} has been invited in this project`,
+          email: u.email,
+          createdAt: new Date(),
+        }),
+      ),
+    );
 
     await Project.findByIdAndUpdate(id, {
       $addToSet: {

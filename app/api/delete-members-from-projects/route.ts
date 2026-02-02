@@ -3,6 +3,10 @@ import Project from "@/app/models/project";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "../graphs/[id]/route";
 import mongoose from "mongoose";
+import activity from "@/app/models/activity";
+import User from "@/app/models/user";
+
+
 
 export async function POST(
   req: NextRequest,
@@ -17,8 +21,6 @@ export async function POST(
 
     const { userId, id: projectId } = await req.json();
 
-    console.log(projectId, userId);
-
     if (!projectId || !userId) {
       return NextResponse.json(
         { error: "Missing project ID or user ID" },
@@ -26,7 +28,11 @@ export async function POST(
       );
     }
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId).populate(
+      "permissbleArray.user",
+      "email name",
+    );
+;
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
@@ -37,11 +43,14 @@ export async function POST(
         { status: 403 },
       );
     }
+
+    
+
     const updatedProject = await Project.findByIdAndUpdate(
       projectId,
       {
         $pull: {
-          permissbleArray: { _id: new mongoose.Types.ObjectId(userId) },
+          permissbleArray: { user: new mongoose.Types.ObjectId(userId) },
         },
       },
       { new: true },
@@ -53,7 +62,17 @@ export async function POST(
         { status: 404 },
       );
     }
-    
+
+    const user = await User.findById(userId);
+
+    await activity.create({
+      projectId,
+      action:"DELETE",
+      log: `${user.email} has been removed from this project`,
+      email: user.email,
+      createdAt: new Date(),
+    });
+
     return NextResponse.json({
       success: true,
       message: "User removed successfully",
