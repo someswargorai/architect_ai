@@ -80,7 +80,6 @@ Goal:
 Now, answer the question completely and thoughtfully.
 `;
 
-
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();

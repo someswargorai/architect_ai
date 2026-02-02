@@ -40,10 +40,7 @@ const Navigation = () => {
       )}
     >
       <div className="flex items-center flex-1 gap-x-4 overflow-hidden">
-        {isMobile && (
-          <SidebarTrigger className="text-zinc-400 hover:text-white transition-colors" />
-        )}
-
+       
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="flex items-center gap-x-2 sm:gap-x-3 capitalize whitespace-nowrap">
             <Link

@@ -16,7 +16,7 @@ export default function Room({
 }) {
 
   const userPresence = { cursor: null, isEditing: false };
-
+ 
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider id={`${projectId}`} initialPresence={userPresence}>

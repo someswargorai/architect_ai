@@ -28,6 +28,7 @@ export default function Chat() {
   const session = (useSession() as unknown) as Session;
   const broadcast = useBroadcastEvent();
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,7 +80,7 @@ export default function Chat() {
 
   return (
     <Panel className="flex flex-col gap-2 ">
-      <Sheet>
+      <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <button className="absolute top-20 bg-white p-1.5 rounded-sm -left-px cursor-pointer">
             <MessageSquareDot className="w-5 h-5  group-hover:rotate-12 transition-transform duration-300 text-amber-400 hover:text-amber-500" />
@@ -109,7 +110,7 @@ export default function Chat() {
                   </div>
                 </div>
                 <button
-                  // onClick={onCancel}
+                  onClick={()=>setOpen(false)}
                   className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-all"
                 >
                   <X className="w-5 h-5" />
@@ -125,13 +126,10 @@ export default function Chat() {
                     <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
                       <History className="w-10 h-10 text-slate-300" />
                     </div>
-                    <h3 className="text-slate-900 font-bold text-sm mb-2 uppercase tracking-wide">
+                    <h3 className="text-slate-900 font-bold text-sm ">
                       Ready to discuss about architecture
                     </h3>
-                    <p className="text-[12px] text-slate-500 max-w-60 leading-relaxed font-medium">
-                      Discuss about bottlenecks, security hardening, or cost
-                      optimizations for your current layout.
-                    </p>
+
                     <p className="text-[12px] text-slate-500 max-w-60 leading-relaxed font-medium">
                       Note: chats are not persisted.
                     </p>
