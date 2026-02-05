@@ -57,12 +57,13 @@ export default function FilterModal({
   };
 
   const Reset = () => {
+    
     setForm({
       priority: undefined,
       startDate: undefined,
       appearance: undefined,
     });
-      setRefetch((prev) => !prev);
+    setRefetch((prev) => !prev);
   };
 
   return (

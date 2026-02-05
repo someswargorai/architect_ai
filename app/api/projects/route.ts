@@ -4,6 +4,10 @@ import Project from "@/app/models/project";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { Liveblocks } from "@liveblocks/node";
+import { getIP } from "@/app/lib/get-ip";
+import { rateLimiter, redis } from "@/app/lib/rateLimit";
+import { rateLimtingFn } from "@/app/lib/rateLimitingFn";
+import { getCache, setCache } from "@/app/lib/cache";
 
 connectDB();
 
@@ -36,12 +40,18 @@ const verifyToken = (req: NextRequest): JwtPayload | null => {
 };
 
 export async function GET(req: NextRequest) {
+
+  const rateLimit = await rateLimtingFn();
+  if(rateLimit) return rateLimit;
+  
   const user = verifyToken(req);
   const search = req.nextUrl.searchParams.get("search");
   const formParam = req.nextUrl.searchParams.get("form");
-
+  
   let form: Partial<Form> = {};
-
+  const key = `projects-get:${user?.id}:${search ?? "all"}:${JSON.stringify(form)}`;
+  const cached = await getCache(key);
+  
   if (formParam) {
     const parsed = JSON.parse(formParam);
 
@@ -95,10 +105,14 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    if(cached){
+      return NextResponse.json(cached, { status: 200 });
+    }
     const projects = await Project.find(query).sort({
       createdAt: -1,
     });
 
+    await setCache(key, projects);
     return NextResponse.json(projects, { status: 200 });
   } catch (err) {
     console.error(err);
@@ -146,6 +160,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await redis.del(`projects-get:${user?.id}`);
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
     console.error("Error creating project or Liveblocks room:", err);

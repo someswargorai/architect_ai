@@ -20,6 +20,8 @@ import { ProjectActions } from "@/app/components/projects/options";
 import { Input } from "@/components/ui/input";
 import FilterModal from "@/app/components/projects/filter";
 import {motion} from 'framer-motion';
+import { toast } from "sonner";
+import axios from "axios";
 
 export interface Form{
     priority: "medium" | "high" | "low" | undefined,
@@ -54,6 +56,9 @@ export default function ProjectsSection() {
         dispatch(setProjects(res?.data));
       } catch (error) {
         console.error("Failed to fetch projects:", error);
+        if(axios.isAxiosError(error)){
+          return toast.error(error?.response?.data?.message);
+        }
       } finally {
         setIsLoading(false);
       }
