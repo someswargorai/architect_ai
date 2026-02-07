@@ -91,9 +91,9 @@ export default function BlockNoteEditorInner({
   }, [editor, canEdit, projectId, broadcast, self?.connectionId]);
 
   return (
-    <div className="relative h-[calc(100vh-84px)] bg-gradient-to-br from-neutral-900 to-neutral-950">
+    <div className="relative h-[calc(100vh-84px)] bg-gradient-to-br from-neutral-900 to-neutral-950 overflow-y-auto">
       <div className="mx-auto w-full h-full">
-        <div className="h-full bg-gradient-to-br bg-[#1f1f1f] shadow-xl overflow-hidden">
+        <div className="h-full bg-gradient-to-br bg-[#1f1f1f] shadow-xl overflow-y-auto">
           <BlockNoteView
             editor={editor}
             editable={canEdit}

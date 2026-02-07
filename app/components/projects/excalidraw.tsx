@@ -3,6 +3,7 @@
 import {
   Excalidraw,
   getSceneVersion,
+  CaptureUpdateAction,
   loadLibraryFromBlob,
   mergeLibraryItems,
 } from "@excalidraw/excalidraw";
@@ -16,14 +17,42 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useBroadcastEvent,
   useEventListener,
-  useOthers,
   useSelf,
-  useUpdateMyPresence,
 } from "@liveblocks/react/suspense";
-import type { Json } from "@liveblocks/client";
 import { useParams } from "next/navigation";
 import http from "@/lib/apiClient";
+import type { Json } from "@liveblocks/client";
+import type { Collaborator } from "@excalidraw/excalidraw/types";
+import type { SocketId } from "@excalidraw/excalidraw/types";
 
+interface DrawScene {
+  elements: readonly ExcalidrawElement[];
+  appState: Partial<AppState>;
+  files: BinaryFiles;
+  version?: number;
+}
+
+
+
+function normalizeCollaborators(
+  value: unknown
+): Map<SocketId, Collaborator> {
+  const map = new Map<SocketId, Collaborator>();
+
+  if (value instanceof Map) {
+    return value as Map<SocketId, Collaborator>;
+  }
+
+  if (value && typeof value === "object" && value !== null) {
+    for (const [key, collaborator] of Object.entries(value)) {
+      if (collaborator && typeof collaborator === "object" && collaborator !== null) {
+        map.set(key as SocketId, collaborator as Collaborator);
+      }
+    }
+  }
+
+  return map;
+}
 const LIBRARIES_BASE =
   "https://raw.githubusercontent.com/excalidraw/excalidraw-libraries/main/libraries";
 
@@ -71,63 +100,39 @@ async function loadAllDefaultLibraries(): Promise<LibraryItems> {
   return merged;
 }
 
-interface DrawScene {
-  elements: readonly ExcalidrawElement[];
-  appState: Partial<AppState>;
-  files: BinaryFiles;
-  version?: number;
-}
-
 export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
   const { id: projectId } = useParams<{ id: string }>();
   const broadcast = useBroadcastEvent();
   const self = useSelf();
-  const updateMyPresence = useUpdateMyPresence();
-  const others = useOthers();
 
-  const initialData = useMemo(
-    () => ({
-      libraryItems: loadAllDefaultLibraries(),
-    }),
-    []
-  );
-
-  const onMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      updateMyPresence({
-        cursor: { x: e.clientX, y: e.clientY },
-      });
-    },
-    [updateMyPresence]
-  );
-
-  const onMouseLeave = useCallback(() => {
-    updateMyPresence({ cursor: null });
-  }, [updateMyPresence]);
-
-  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
-  const isRemoteUpdate = useRef(false);
-  const saveTimeout = useRef<NodeJS.Timeout | null>(null);
-  const lastBroadcastVersion = useRef<number>(-1);
+  const excalidrawAPI = useRef<ExcalidrawImperativeAPI | null>(null);
+  const isRemote = useRef(false);
+  const lastVersion = useRef(0);
 
   const [scene, setScene] = useState<DrawScene>({
     elements: [],
     appState: {
-      viewBackgroundColor: "#ffffff",
       showWelcomeScreen: false,
-      zenModeEnabled: false,
       collaborators: new Map(),
     },
     files: {},
     version: 0,
   });
 
-  useEffect(() => {
+    const initialData = useMemo(
+    () => ({
+      libraryItems: loadAllDefaultLibraries(),
+    }),
+    []
+  );
+
+
+   useEffect(() => {
     if (!excalidrawAPI) return;
     let cancelled = false;
     loadAllDefaultLibraries().then((items) => {
       if (cancelled || !items.length) return;
-      excalidrawAPI.updateLibrary({
+      excalidrawAPI.current?.updateLibrary({
         libraryItems: items,
         merge: true,
         openLibraryMenu: false,
@@ -137,120 +142,87 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
     return () => { cancelled = true; };
   }, [excalidrawAPI]);
 
+  /* LOAD FROM BACKEND */
   useEffect(() => {
-    let mounted = true;
-
     async function load() {
-      try {
-        const res = await http.get<{ success: boolean; content: DrawScene }>(
-          `/api/draw/${projectId}`
-        );
+      const res = await http.get<{ success: boolean; content: DrawScene }>(
+        `/api/draw/${projectId}`
+      );
 
-        if (!mounted) return;
+      if (!res.data?.content) return;
 
-        let loaded: DrawScene | null = null;
+      const elements = res.data.content.elements ?? [];
+      const appState = res.data.content.appState ?? {};
 
-        if (res.data.success && res.data.content) {
-          loaded = res.data.content;
-        } else {
+      const fixedAppState: Partial<AppState> = {
+        ...appState,
+        showWelcomeScreen: false,
+        collaborators: normalizeCollaborators(appState.collaborators),
+      };
 
-          const saved = localStorage.getItem("excalidraw-board");
-          if (saved) {
-            try {
-              loaded = JSON.parse(saved) as DrawScene;
-            } catch {
-              console.warn("Invalid localStorage drawing data");
-            }
-          }
-        }
+      const version = getSceneVersion(elements);
 
-        if (!loaded || !loaded.elements?.length) return;
+      setScene({
+        elements,
+        appState: fixedAppState,
+        files: res.data.content.files ?? {},
+        version,
+      });
 
-        const loadedCollaborators = loaded.appState?.collaborators;
-        const collaborators =
-          loadedCollaborators instanceof Map
-            ? loadedCollaborators
-            : Array.isArray(loadedCollaborators)
-              ? new Map(loadedCollaborators as Iterable<[string, unknown]>)
-              : new Map();
+      lastVersion.current = version;
 
-        const normalizedAppState: Partial<AppState> = {
-          ...loaded.appState,
-          showWelcomeScreen: false,
-          collaborators,
-        };
-
-        const finalScene: DrawScene = {
-          ...loaded,
-          appState: normalizedAppState,
-          version: getSceneVersion(loaded.elements),
-        };
-
-        setScene(finalScene);
-        lastBroadcastVersion.current = finalScene.version ?? 0;
-
-        if (excalidrawAPI) {
-          excalidrawAPI.updateScene({
-            elements: finalScene.elements,
-            appState: finalScene.appState as AppState,
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load drawing:", err);
-      }
+      excalidrawAPI.current?.updateScene({
+        elements,
+        appState: fixedAppState as AppState,
+      });
     }
 
     load();
+  }, [projectId]);
 
-    return () => {
-      mounted = false;
-    };
-  }, [projectId, excalidrawAPI]);
-
-  useEffect(() => {
-    if (!excalidrawAPI) return;
-
-    excalidrawAPI.updateScene({
-      elements: scene.elements,
-      appState: scene.appState as AppState,
-    });
-  }, [excalidrawAPI, scene.elements, scene.appState, scene.files]);
-
+  /* LOCAL CHANGE */
   const handleChange = useCallback(
     (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-      if (!canEdit || isRemoteUpdate.current) return;
+      if (!canEdit || isRemote.current) return;
 
-      const newVersion = getSceneVersion(elements);
-      if (newVersion === lastBroadcastVersion.current) return;
+      const version = getSceneVersion(elements);
+      if (version === lastVersion.current) return;
 
-      const newScene: DrawScene = { elements, appState, files, version: newVersion };
+      const cleanAppState: Partial<AppState> = {
+        ...appState,
+        collaborators: normalizeCollaborators(appState.collaborators),
+      };
+
+       const newScene: DrawScene = {
+        elements,
+        appState: cleanAppState,
+        files,
+        version,
+      };
 
       setScene(newScene);
+      lastVersion.current = version;
 
-      const payload: Json = JSON.parse(
-        JSON.stringify({
-          type: "draw_update",
-          payload: {
-            content: newScene,
-            senderId: String(self?.connectionId ?? "unknown"),
-          },
-        })
-      );
+      const payload: Json = {
+  type: "draw_update",
+  payload: {
+    // ✅ Convert to JSON-safe object
+    content: JSON.parse(JSON.stringify(newScene)),
+    senderId: String(self?.connectionId ?? "unknown"),
+  },
+};
+
+
       broadcast(payload);
 
-      lastBroadcastVersion.current = newVersion;
-
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
-      saveTimeout.current = setTimeout(() => {
-        http.post(`/api/draw/${projectId}`, { content: newScene }).catch(console.error);
-        localStorage.setItem("excalidraw-board", JSON.stringify(newScene));
-      }, 1800);
+      http.post(`/api/draw/${projectId}`, { content: newScene }).catch(() => {});
     },
     [canEdit, broadcast, self?.connectionId, projectId]
   );
 
+  /* REMOTE UPDATE */
   useEventListener(({ event }) => {
-    if (
+     if (
       !event ||
       typeof event !== "object" ||
       !("type" in event) ||
@@ -258,90 +230,48 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
       !("payload" in event)
     )
       return;
+    if (!event || event.type !== "draw_update") return;
+
     const payload = event.payload as unknown as {
       content: DrawScene;
       senderId: string;
     };
-    const { content, senderId } = payload;
 
-    if (String(senderId) === String(self?.connectionId)) return;
+    if (!payload?.content) return;
+    if (payload.senderId === String(self?.connectionId)) return;
 
-    isRemoteUpdate.current = true;
+    isRemote.current = true;
 
-    const rawCollaborators = content.appState?.collaborators;
-    const collaborators =
-      rawCollaborators instanceof Map
-        ? rawCollaborators
-        : Array.isArray(rawCollaborators)
-          ? new Map(rawCollaborators as Iterable<[string, unknown]>)
-          : new Map();
+    const elements = payload.content.elements ?? [];
 
-    const normalizedAppState: Partial<AppState> = {
-      ...content.appState,
-      showWelcomeScreen: false,
-      collaborators,
-    };
+    excalidrawAPI.current?.updateScene({
+      elements, // 🔥 FORCE REPLACE → fixes Edge issue
+      appState: {
+        ...payload.content.appState,
+        showWelcomeScreen: false,
+        collaborators: normalizeCollaborators(
+          payload.content.appState?.collaborators
+        ),
+      } as AppState,
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
 
-    const newVersion = content.version ?? getSceneVersion(content.elements);
-
-    const newScene: DrawScene = {
-      elements: content.elements,
-      appState: normalizedAppState,
-      files: content.files ?? {},
-      version: newVersion,
-    };
-
-    setScene(newScene);
-
-    if (excalidrawAPI) {
-      excalidrawAPI.updateScene({
-        elements: newScene.elements,
-        appState: newScene.appState as AppState,
-      });
-    }
-
-    lastBroadcastVersion.current = newVersion;
+    lastVersion.current = getSceneVersion(elements);
 
     setTimeout(() => {
-      isRemoteUpdate.current = false;
-    }, 0);
+      isRemote.current = false;
+    }, 50);
   });
 
   return (
-    <div
-      className="relative h-[calc(100vh-84px)] w-full rounded-xl overflow-hidden"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-    >
+    <div className="h-full w-full">
       <Excalidraw
-        excalidrawAPI={(api) => setExcalidrawAPI(api)}
+        excalidrawAPI={(api) => (excalidrawAPI.current = api)}
         onChange={handleChange}
         initialData={initialData}
-        autoFocus={true}
         viewModeEnabled={!canEdit}
         theme="dark"
-        name="Collaborative Whiteboard"
       />
-      {others.map(({ connectionId, presence }) => {
-        if (!presence?.cursor) return null;
-        return (
-          <div
-            key={connectionId}
-            className="pointer-events-none fixed z-[100] -translate-x-1/2 -translate-y-1/2"
-            style={{
-              left: presence.cursor!.x,
-              top: presence.cursor!.y,
-            }}
-          >
-            <div className="h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white shadow" />
-            <div className="mt-1 rounded-md bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white whitespace-nowrap shadow">
-              {(presence as { name?: string; email?: string }).name ??
-                (presence as { name?: string; email?: string }).email ??
-                "User"}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
