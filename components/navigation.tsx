@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
-import { SidebarTrigger, useSidebar } from "./ui/sidebar";
+import { useSidebar } from "./ui/sidebar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -33,10 +33,10 @@ const Navigation = () => {
   return (
     <header
       className={cn(
-        "sticky top-4 z-40 mx-4 transition-all duration-500 ease-in-out border flex items-center justify-between min-h-[76px] px-4 sm:px-6 rounded-2xl gap-x-3",
+        "sticky top-4 z-40 mx-0 transition-all duration-500 ease-in-out border flex items-center justify-between min-h-[76px] px-4 sm:px-6 rounded-2xl gap-x-3",
         "bg-black/40 backdrop-blur-2xl border-white/5",
         "shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)]",
-        scrolled ? "top-4 shadow-amber-500/5" : "top-2",
+        scrolled ? "top-0 shadow-amber-500/5" : "top-0",
       )}
     >
       <div className="flex items-center flex-1 gap-x-4 overflow-hidden">

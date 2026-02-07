@@ -39,6 +39,10 @@ import ShowOnlines from "./show-onlines";
 import LiveCursors from "./live-cursor";
 import Chat from "./chat";
 
+import BlockNoteEditor from "./note";
+import ExcalidrawBoard from "./excalidraw";
+import { PremiumSwitcher } from "./premium-switcher";
+
 const CanvasStudio = () => {
   const dispatch = useDispatch();
   const nodes = useSelector((state: RootState) => state.flow.nodes);
@@ -48,6 +52,7 @@ const CanvasStudio = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [editedLabel, setEditedLabel] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
+  const [tab, setTab]= useState(1);
 
   const editingTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -257,7 +262,11 @@ const onMouseLeave = useCallback(() => {
 
   return (
     <div style={{ height: "calc(100vh - 84px)", width: "100%" }}>
-      <ReactFlow
+
+    <PremiumSwitcher activeTab={tab} setTab={setTab}/>
+
+      
+      {tab===1 ? <ReactFlow
         nodes={nodes}
         edges={edges}
         onMouseMove={onMouseMove}
@@ -283,6 +292,10 @@ const onMouseLeave = useCallback(() => {
         <LiveCursors/>
         <Chat/>
       </ReactFlow>
+      : tab === 2 ? 
+        <BlockNoteEditor canEdit={canEdit}/>
+      : <ExcalidrawBoard canEdit={canEdit}/>
+      }
 
       <EditNodeModal
         isOpen={isEditModalOpen}
