@@ -25,14 +25,14 @@ import type { Json } from "@liveblocks/client";
 import type { Collaborator } from "@excalidraw/excalidraw/types";
 import type { SocketId } from "@excalidraw/excalidraw/types";
 
+const MAX_ELEMENTS = 300;
+
 interface DrawScene {
   elements: readonly ExcalidrawElement[];
   appState: Partial<AppState>;
-  files: BinaryFiles;
+ 
   version?: number;
 }
-
-
 
 function normalizeCollaborators(
   value: unknown
@@ -53,6 +53,7 @@ function normalizeCollaborators(
 
   return map;
 }
+
 const LIBRARIES_BASE =
   "https://raw.githubusercontent.com/excalidraw/excalidraw-libraries/main/libraries";
 
@@ -115,20 +116,19 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
       showWelcomeScreen: false,
       collaborators: new Map(),
     },
-    files: {},
+  
     version: 0,
   });
 
-    const initialData = useMemo(
+  const initialData = useMemo(
     () => ({
       libraryItems: loadAllDefaultLibraries(),
     }),
     []
   );
 
-
-   useEffect(() => {
-    if (!excalidrawAPI) return;
+  useEffect(() => {
+    if (!excalidrawAPI.current) return;
     let cancelled = false;
     loadAllDefaultLibraries().then((items) => {
       if (cancelled || !items.length) return;
@@ -140,7 +140,7 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
       }).catch((e) => console.warn("Failed to merge default libraries:", e));
     });
     return () => { cancelled = true; };
-  }, [excalidrawAPI]);
+  }, []);
 
   /* LOAD FROM BACKEND */
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
       setScene({
         elements,
         appState: fixedAppState,
-        files: res.data.content.files ?? {},
+       
         version,
       });
 
@@ -181,48 +181,107 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
   }, [projectId]);
 
   /* LOCAL CHANGE */
-  const handleChange = useCallback(
-    (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-      if (!canEdit || isRemote.current) return;
+const handleChange = useCallback(
+  (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
+    if (!canEdit || isRemote.current) return;
 
-      const version = getSceneVersion(elements);
-      if (version === lastVersion.current) return;
+    // ─── Block adding more elements when limit is reached ───
+    const nonDeletedCount = elements.filter((el) => !el.isDeleted).length;
+    const prevNonDeletedCount = scene.elements.filter((el) => !el.isDeleted).length;
 
-      const cleanAppState: Partial<AppState> = {
-        ...appState,
-        collaborators: normalizeCollaborators(appState.collaborators),
+    if (nonDeletedCount > MAX_ELEMENTS && nonDeletedCount > prevNonDeletedCount) {
+      // Trying to add more than allowed → reject the new element(s)
+      excalidrawAPI.current?.updateScene({
+        elements: scene.elements, // revert to previous state
+      });
+
+      alert("Canvas limit reached (300 elements). Please delete some elements before adding more.");
+
+      return; // stop here — do not broadcast or save
+    }
+
+    const version = getSceneVersion(elements);
+    if (version === lastVersion.current) return;
+
+    
+    const cleanAppState: Partial<AppState> = {
+      ...appState,
+      collaborators: normalizeCollaborators(appState.collaborators),
+    };
+
+    // ─── Only keep non-deleted elements for payload ───
+    const nonDeletedElements = elements.filter((el) => !el.isDeleted);
+
+    const newScene: DrawScene = {
+      elements, // full array (for local state + backend save)
+      appState: cleanAppState,
+      
+      version,
+    };
+
+    setScene(newScene);
+    lastVersion.current = version;
+
+    // ─── Reset to initial state if everything is deleted ───
+    const allDeleted = elements.length === 0 || elements.every((el) => el.isDeleted === true);
+
+    if (allDeleted) {
+      const emptyScene: DrawScene = {
+        elements: [],
+        appState: {
+          showWelcomeScreen: false,
+          collaborators: new Map(),
+        },
+    
+        version: 0,
       };
 
-       const newScene: DrawScene = {
-        elements,
-        appState: cleanAppState,
-        files,
-        version,
-      };
+      setScene(emptyScene);
+      lastVersion.current = 0;
 
-      setScene(newScene);
-      lastVersion.current = version;
+      excalidrawAPI.current?.updateScene({
+        elements: [],
+        appState: {
+          ...cleanAppState,
+          showWelcomeScreen: false,
+        } as AppState,
+      });
 
-      const payload: Json = {
-  type: "draw_update",
-  payload: {
-    // ✅ Convert to JSON-safe object
-    content: JSON.parse(JSON.stringify(newScene)),
-    senderId: String(self?.connectionId ?? "unknown"),
+      broadcast({
+        type: "draw_update",
+        payload: {
+          content: JSON.parse(JSON.stringify(emptyScene)),
+          senderId: String(self?.connectionId ?? "unknown"),
+        },
+      });
+
+      return;
+    }
+
+    // ─── Normal case: send ONLY non-deleted elements ───
+    const payload: Json = {
+      type: "draw_update",
+      payload: {
+        content: JSON.parse(JSON.stringify({
+          ...newScene,
+          elements: nonDeletedElements,
+        })),
+        senderId: String(self?.connectionId ?? "unknown"),
+      },
+    };
+
+    console.log("payload", payload);
+    broadcast(payload);
+
+    // Full scene (including deleted) goes to backend
+    http.post(`/api/draw/${projectId}`, { content: newScene }).catch(() => {});
   },
-};
-
-
-      broadcast(payload);
-
-      http.post(`/api/draw/${projectId}`, { content: newScene }).catch(() => {});
-    },
-    [canEdit, broadcast, self?.connectionId, projectId]
-  );
+  [canEdit, broadcast, self?.connectionId, projectId, scene.elements]
+);
 
   /* REMOTE UPDATE */
   useEventListener(({ event }) => {
-     if (
+    if (
       !event ||
       typeof event !== "object" ||
       !("type" in event) ||
@@ -230,12 +289,13 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
       !("payload" in event)
     )
       return;
-    if (!event || event.type !== "draw_update") return;
 
     const payload = event.payload as unknown as {
       content: DrawScene;
       senderId: string;
     };
+
+    console.log("payload", payload);
 
     if (!payload?.content) return;
     if (payload.senderId === String(self?.connectionId)) return;
@@ -244,34 +304,99 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
 
     const elements = payload.content.elements ?? [];
 
-    excalidrawAPI.current?.updateScene({
-      elements, // 🔥 FORCE REPLACE → fixes Edge issue
-      appState: {
-        ...payload.content.appState,
-        showWelcomeScreen: false,
-        collaborators: normalizeCollaborators(
-          payload.content.appState?.collaborators
-        ),
-      } as AppState,
-      captureUpdate: CaptureUpdateAction.NEVER,
-    });
+    // ─── NEW: Also reset on remote if all deleted ───
+    const allDeleted = elements.length === 0 || elements.every(el => el.isDeleted === true);
 
-    lastVersion.current = getSceneVersion(elements);
+    if (allDeleted) {
+      excalidrawAPI.current?.updateScene({
+        elements: [],
+        appState: {
+          ...payload.content.appState,
+          showWelcomeScreen: false,
+        } as AppState,
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+
+      setScene({
+        elements: [],
+        appState: {
+          showWelcomeScreen: false,
+          collaborators: normalizeCollaborators(payload.content.appState?.collaborators),
+        },
+        version: 0,
+      });
+
+      lastVersion.current = 0;
+    } else {
+      excalidrawAPI.current?.updateScene({
+        elements,
+        appState: {
+          ...payload.content.appState,
+          showWelcomeScreen: false,
+          collaborators: normalizeCollaborators(
+            payload.content.appState?.collaborators
+          ),
+        } as AppState,
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+
+      lastVersion.current = getSceneVersion(elements);
+    }
 
     setTimeout(() => {
       isRemote.current = false;
     }, 50);
   });
 
+  const handlePointerUpdate = useCallback(
+  (payload: { pointer: { x: number; y: number }; button: "up" | "down" | null }) => {
+    if (!excalidrawAPI.current) return;
+
+    const appState = excalidrawAPI.current.getAppState();
+
+    if (appState.editingTextElement?.type === "text") {
+      // Force a scene update / broadcast while typing
+      const elements = excalidrawAPI.current.getSceneElements();
+     
+
+      const payload = {
+        type: "draw_update",
+        payload: {
+          content: JSON.parse(JSON.stringify({
+            elements: elements.filter((el) => !el.isDeleted),
+            appState: {
+              viewBackgroundColor: appState.viewBackgroundColor,
+            },
+            version: getSceneVersion(elements),
+          })),
+          senderId: String(self?.connectionId ?? "unknown"),
+        },
+      };
+
+      broadcast(payload);
+    }
+  },
+  [broadcast, self?.connectionId]
+);
+
   return (
     <div className="h-full w-full">
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPI.current = api)}
         onChange={handleChange}
+        onPointerUpdate={handlePointerUpdate}
         initialData={initialData}
         viewModeEnabled={!canEdit}
         theme="dark"
+        UIOptions={{
+          canvasActions: {
+            loadScene: false,
+            saveToActiveFile: false,
+            saveAsImage: false
+          },
+        }}
       />
+    
     </div>
   );
 }
