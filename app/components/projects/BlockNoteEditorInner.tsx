@@ -30,10 +30,9 @@ export default function BlockNoteEditorInner({
   canEdit: boolean;
   projectId: string;
 }) {
-  const { resolvedTheme } = useTheme();
+
   const self = useSelf();
   const broadcast = useBroadcastEvent();
-  const session = useSession() as unknown as Session;
 
   const isRemoteUpdate = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -65,17 +64,17 @@ export default function BlockNoteEditorInner({
       if (!canEdit || isRemoteUpdate.current) return;
 
       if (debounceRef.current) clearTimeout(debounceRef.current);
-
+      const content = editor.document;
+      broadcast({
+        type: "Type_note",
+        payload: {
+          note: JSON.parse(JSON.stringify(content)),
+          senderId: self?.connectionId,
+        },
+      });
       debounceRef.current = setTimeout(async () => {
         const content = editor.document;
 
-        broadcast({
-          type: "Type_note",
-          payload: {
-            note: JSON.parse(JSON.stringify(content)),
-            senderId: self?.connectionId,
-          },
-        });
 
         try {
           await http.post(`/api/note/content-upload/${projectId}`, {
