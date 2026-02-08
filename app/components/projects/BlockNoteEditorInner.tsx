@@ -85,7 +85,7 @@ export default function BlockNoteEditorInner({
           await http.post(`/api/note/content-upload/${projectId}`, {
             content,
           });
-          toast.success("Note saved");
+         
         } catch (err) {
           console.error("Failed to save note:", err);
           toast.error("Failed to save note");
