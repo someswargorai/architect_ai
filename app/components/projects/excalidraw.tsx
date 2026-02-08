@@ -24,6 +24,8 @@ import http from "@/lib/apiClient";
 import type { Json } from "@liveblocks/client";
 import type { Collaborator } from "@excalidraw/excalidraw/types";
 import type { SocketId } from "@excalidraw/excalidraw/types";
+import { toast } from "sonner";
+import LiveCursors from "./live-cursor";
 
 const MAX_ELEMENTS = 300;
 
@@ -102,14 +104,14 @@ async function loadAllDefaultLibraries(): Promise<LibraryItems> {
 }
 
 export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
+  
   const { id: projectId } = useParams<{ id: string }>();
   const broadcast = useBroadcastEvent();
   const self = useSelf();
-
   const excalidrawAPI = useRef<ExcalidrawImperativeAPI | null>(null);
   const isRemote = useRef(false);
   const lastVersion = useRef(0);
-
+  const saveTimeout = useRef<NodeJS.Timeout>(null);
   const [scene, setScene] = useState<DrawScene>({
     elements: [],
     appState: {
@@ -142,7 +144,6 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
     return () => { cancelled = true; };
   }, []);
 
-  /* LOAD FROM BACKEND */
   useEffect(() => {
     async function load() {
       const res = await http.get<{ success: boolean; content: DrawScene }>(
@@ -180,24 +181,36 @@ export default function ExcalidrawBoard({ canEdit }: { canEdit: boolean }) {
     load();
   }, [projectId]);
 
-  /* LOCAL CHANGE */
+  
 const handleChange = useCallback(
   (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-    if (!canEdit || isRemote.current) return;
+   
+    if (!canEdit) {
+        
+        if (excalidrawAPI.current) {
+          excalidrawAPI.current.updateScene({
+            elements: scene.elements,
+            appState: scene.appState as AppState,
+          });
+        }
+        toast.warning("You don't have permission to edit the canvas");
+        return; 
+      }
 
-    // ─── Block adding more elements when limit is reached ───
+    if (isRemote.current) return;
+
     const nonDeletedCount = elements.filter((el) => !el.isDeleted).length;
     const prevNonDeletedCount = scene.elements.filter((el) => !el.isDeleted).length;
 
     if (nonDeletedCount > MAX_ELEMENTS && nonDeletedCount > prevNonDeletedCount) {
-      // Trying to add more than allowed → reject the new element(s)
+    
       excalidrawAPI.current?.updateScene({
-        elements: scene.elements, // revert to previous state
+        elements: scene.elements, 
       });
 
-      alert("Canvas limit reached (300 elements). Please delete some elements before adding more.");
+      toast.info("Canvas limit reached (300 elements). Please delete some elements before adding more.");
 
-      return; // stop here — do not broadcast or save
+      return;
     }
 
     const version = getSceneVersion(elements);
@@ -209,11 +222,10 @@ const handleChange = useCallback(
       collaborators: normalizeCollaborators(appState.collaborators),
     };
 
-    // ─── Only keep non-deleted elements for payload ───
     const nonDeletedElements = elements.filter((el) => !el.isDeleted);
 
     const newScene: DrawScene = {
-      elements, // full array (for local state + backend save)
+      elements,
       appState: cleanAppState,
       
       version,
@@ -222,7 +234,6 @@ const handleChange = useCallback(
     setScene(newScene);
     lastVersion.current = version;
 
-    // ─── Reset to initial state if everything is deleted ───
     const allDeleted = elements.length === 0 || elements.every((el) => el.isDeleted === true);
 
     if (allDeleted) {
@@ -258,7 +269,7 @@ const handleChange = useCallback(
       return;
     }
 
-    // ─── Normal case: send ONLY non-deleted elements ───
+ 
     const payload: Json = {
       type: "draw_update",
       payload: {
@@ -273,13 +284,20 @@ const handleChange = useCallback(
     console.log("payload", payload);
     broadcast(payload);
 
-    // Full scene (including deleted) goes to backend
-    http.post(`/api/draw/${projectId}`, { content: newScene }).catch(() => {});
+    if (saveTimeout.current) {
+      clearTimeout(saveTimeout.current);
+    }
+
+    saveTimeout.current = setTimeout(() => {
+      http.post(`/api/draw/${projectId}`, { content: newScene }).catch((err) => {
+        console.error("Backend save failed:", err);
+        toast.error("Failed to save canvas");
+      });
+    }, 1500);
   },
-  [canEdit, broadcast, self?.connectionId, projectId, scene.elements]
+  [canEdit, broadcast, self?.connectionId, projectId, scene.elements,scene.appState]
 );
 
-  /* REMOTE UPDATE */
   useEventListener(({ event }) => {
     if (
       !event ||
@@ -289,63 +307,74 @@ const handleChange = useCallback(
       !("payload" in event)
     )
       return;
+      
+   const payload = event.payload as unknown as {
+    content: DrawScene;
+    senderId: string;
+  };
 
-    const payload = event.payload as unknown as {
-      content: DrawScene;
-      senderId: string;
-    };
+  if (!payload?.content) return;
+  if (payload.senderId === String(self?.connectionId)) return;
 
-    console.log("payload", payload);
 
-    if (!payload?.content) return;
-    if (payload.senderId === String(self?.connectionId)) return;
+  isRemote.current = true;
 
-    isRemote.current = true;
+  const elements = payload.content.elements ?? [];
 
-    const elements = payload.content.elements ?? [];
+  const safeCollaborators = normalizeCollaborators(payload.content.appState?.collaborators);
 
-    // ─── NEW: Also reset on remote if all deleted ───
-    const allDeleted = elements.length === 0 || elements.every(el => el.isDeleted === true);
+  const allDeleted = elements.length === 0 || elements.every(el => el.isDeleted === true);
+  
 
-    if (allDeleted) {
-      excalidrawAPI.current?.updateScene({
-        elements: [],
-        appState: {
-          ...payload.content.appState,
-          showWelcomeScreen: false,
-        } as AppState,
-        captureUpdate: CaptureUpdateAction.NEVER,
-      });
+  if (allDeleted) {
+    excalidrawAPI.current?.updateScene({
+      elements: [],
+      appState: {
+        ...payload.content.appState,
+        showWelcomeScreen: false,
+        collaborators: safeCollaborators, 
+      } as AppState,
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
 
-      setScene({
-        elements: [],
-        appState: {
-          showWelcomeScreen: false,
-          collaborators: normalizeCollaborators(payload.content.appState?.collaborators),
-        },
-        version: 0,
-      });
+    setScene({
+      elements: [],
+      appState: {
+        showWelcomeScreen: false,
+        collaborators: safeCollaborators,
+      },
+      version: 0,
+    });
 
-      lastVersion.current = 0;
-    } else {
-      excalidrawAPI.current?.updateScene({
-        elements,
-        appState: {
-          ...payload.content.appState,
-          showWelcomeScreen: false,
-          collaborators: normalizeCollaborators(
-            payload.content.appState?.collaborators
-          ),
-        } as AppState,
-        captureUpdate: CaptureUpdateAction.NEVER,
-      });
+    lastVersion.current = 0;
+  } else {
+    excalidrawAPI.current?.updateScene({
+      elements,
+      appState: {
+        ...payload.content.appState,
+        showWelcomeScreen: false,
+        collaborators: safeCollaborators,
+      } as AppState,
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
 
-      lastVersion.current = getSceneVersion(elements);
-    }
+    lastVersion.current = elements.length > 0 ? getSceneVersion(elements) : 0;
+  }
 
-    setTimeout(() => {
-      isRemote.current = false;
-    }, 50);
+  setScene((prev) => ({
+    ...prev,
+    elements,
+    appState: {
+      ...prev.appState,
+      ...payload.content.appState,
+      collaborators: safeCollaborators, // ← always Map
+    },
+    version: lastVersion.current,
+  }));
+
+  setTimeout(() => {
+    isRemote.current = false;
+  }, 50);
   });
 
   const handlePointerUpdate = useCallback(
@@ -355,7 +384,7 @@ const handleChange = useCallback(
     const appState = excalidrawAPI.current.getAppState();
 
     if (appState.editingTextElement?.type === "text") {
-      // Force a scene update / broadcast while typing
+      
       const elements = excalidrawAPI.current.getSceneElements();
      
 
@@ -383,7 +412,7 @@ const handleChange = useCallback(
     <div className="h-full w-full">
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPI.current = api)}
-        onChange={handleChange}
+        onChange={canEdit ? handleChange: undefined}
         onPointerUpdate={handlePointerUpdate}
         initialData={initialData}
         viewModeEnabled={!canEdit}
@@ -394,9 +423,12 @@ const handleChange = useCallback(
             saveToActiveFile: false,
             saveAsImage: false
           },
+          tools:{
+            image:false
+          }
         }}
       />
-    
+      <LiveCursors/>
     </div>
   );
 }
