@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 interface HeroProps {
   onStart?: () => void;
 }
@@ -28,12 +30,12 @@ const Hero: React.FC<HeroProps> = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <button 
-              // onClick={onLaunch}
+            <Link 
+              href={"/auth"}
               className="group relative w-full sm:w-auto px-12 py-5 bg-amber-500 text-black rounded-sm font-500 text-sm transition-all hover:scale-105 shadow-[0_20px_40px_rgba(245,158,11,0.2)]"
             >
               Launch Platform
-            </button>
+            </Link>
             <button className="w-full sm:w-auto px-12 py-5 bg-transparent text-white rounded-sm font-500 text-sm border border-white/10 hover:bg-white/5 transition-all">
               Request Demo
             </button>
