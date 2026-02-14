@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../graphs/[id]/route";
 import Project from "@/app/models/project";
 import axios from "axios";
 import nodemailer from "nodemailer";
 import User from "@/app/models/user";
 import activity from "@/app/models/activity";
+import { verifyToken } from "../middleware/verify-token.middleware";
 
 export async function POST(req: NextRequest) {
   try {

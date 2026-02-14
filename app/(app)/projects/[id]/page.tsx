@@ -2,14 +2,14 @@
 
 import CanvasStudio from "@/app/components/projects/canvas-studio";
 import { useParams } from "next/navigation";
-import Room from "../../Room/page";
+import RoomProviderClient from "../../Room/RoomProviderClient";
 
 export default function Page() {
   
   const {id}= useParams();
   return (
-    <Room projectId={id as string}>
+    <RoomProviderClient projectId={id as string}>
       <CanvasStudio />
-    </Room>
+    </RoomProviderClient>
   );
 }

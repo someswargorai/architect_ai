@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../graphs/[id]/route";
 import { connectDB } from "@/app/lib/mongodb";
 
 connectDB();
 
 import User from "@/app/models/user";
 import Project from "@/app/models/project";
+import { verifyToken } from "../middleware/verify-token.middleware";
 
 export async function GET(req: NextRequest) {
   try {

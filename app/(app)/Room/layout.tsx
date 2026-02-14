@@ -1,0 +1,13 @@
+import { ReactNode } from "react";
+
+export default async function RoomLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <>
+      {children}
+    </>
+  );
+}

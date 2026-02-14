@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../../graphs/[id]/route";
 import mongoose from "mongoose";
 import Project from "@/app/models/project";
+import { verifyToken } from "../../middleware/verify-token.middleware";
 
 export async function GET(req: NextRequest) {
   const user = verifyToken(req);

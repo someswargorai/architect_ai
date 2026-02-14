@@ -11,7 +11,6 @@ const nextConfig = {
       },
     ],
   },
-  turbopack: {}, 
 } satisfies NextConfig;
 
 export default withPWA({

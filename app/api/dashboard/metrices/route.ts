@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
 import Graph from "@/app/models/graph";
-import { verifyToken } from "../../graphs/[id]/route";
 import mongoose from "mongoose";
+import { verifyToken } from "../../middleware/verify-token.middleware";
 
 export async function GET(req: NextRequest) {
   try {

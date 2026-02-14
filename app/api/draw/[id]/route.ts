@@ -1,24 +1,11 @@
 // app/api/draw/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
-import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "@/app/models/user";
 import Project from "@/app/models/project";
 import { Draw } from "@/app/models/draw";
+import { verifyToken } from "../../middleware/verify-token.middleware";
 
-const verifyToken = (req: NextRequest): JwtPayload | null => {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return null;
-
-  const token = authHeader.split(" ")[1];
-  if (!token) return null;
-
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-  } catch {
-    return null;
-  }
-};
 
 export async function GET(
   req: NextRequest,

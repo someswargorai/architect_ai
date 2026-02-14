@@ -1,10 +1,10 @@
 import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../graphs/[id]/route";
 import mongoose from "mongoose";
 import activity from "@/app/models/activity";
 import User from "@/app/models/user";
+import { verifyToken } from "../middleware/verify-token.middleware";
 
 
 

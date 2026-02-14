@@ -1,10 +1,10 @@
 import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../graphs/[id]/route";
 import nodemailer from "nodemailer";
 import { Liveblocks } from "@liveblocks/node";
 import activity from "@/app/models/activity";
+import { verifyToken } from "../middleware/verify-token.middleware";
 
 const liveblocks = new Liveblocks({
   secret: process.env.LIVEBLOCK_SECRET_KEY!,

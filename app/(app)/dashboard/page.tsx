@@ -19,39 +19,8 @@ interface Project {
   priority?: "Low" | "Medium" | "High";
 }
 
-interface DashboardProps {
-  onLaunchEditor: () => void;
-  onLogout: () => void;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor }) => {
+const Dashboard = () => {
   const [open, setOpen] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      _id: "1",
-      name: "Microservices Mesh",
-      description: "Internal service communication diagram",
-      createdAt: new Date().toISOString(),
-      progress: 65,
-      priority: "High",
-    },
-    {
-      _id: "2",
-      name: "Edge Gateway v2",
-      description: "Public API entry point",
-      createdAt: new Date().toISOString(),
-      progress: 100,
-      priority: "Medium",
-    },
-    {
-      _id: "3",
-      name: "Auth Bridge",
-      description: "SSO and Identity provider flow",
-      createdAt: new Date().toISOString(),
-      progress: 12,
-      priority: "High",
-    },
-  ]);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentlyAddedArchitures, setRecentlyAddedArchitectures] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -249,13 +218,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onLaunchEditor }) => {
                   title="Generate with AI"
                   desc="Text-to-architecture studio"
                   icon="ai"
-                  onClick={onLaunchEditor}
+                  // onClick={onLaunchEditor}
                 />
                 <QuickAction
                   title="Blank Canvas"
                   desc="Manual precision drafting"
                   icon="plus"
-                  onClick={onLaunchEditor}
+                  // onClick={onLaunchEditor}
                 />
                 <QuickAction
                   title="Library"

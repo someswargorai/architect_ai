@@ -1,4 +1,4 @@
-import { verifyToken } from "@/app/api/graphs/[id]/route";
+import { verifyToken } from "@/app/api/middleware/verify-token.middleware";
 import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
 import { NextRequest, NextResponse } from "next/server";

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Liveblocks } from "@liveblocks/node";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/app/lib/mongodb";
 import Project from "@/app/models/project";
+import { authOptions } from "@/lib/auth";
 
 
 const liveblocks = new Liveblocks({

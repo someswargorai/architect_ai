@@ -1,26 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import graph from "@/app/models/graph";
-import { JwtPayload } from "jsonwebtoken";
-import jwt from "jsonwebtoken";
 import User from "@/app/models/user";
 import Project from "@/app/models/project";
-
-export const verifyToken = (req: NextRequest): JwtPayload | null => {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return null;
-
-  const token = authHeader.split(" ")[1];
-  if (!token) return null;
-
-  try {
-    const secret = process.env.JWT_SECRET!;
-    const decoded = jwt.verify(token, secret) as JwtPayload;
-    return decoded;
-  } catch (err) {
-    return null;
-  }
-};
+import { verifyToken } from "../../middleware/verify-token.middleware";
 
 export async function GET(
   req: NextRequest,

@@ -1,7 +1,8 @@
 import { connectDB } from "@/app/lib/mongodb";
 import User from "@/app/models/user";
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../graphs/[id]/route";
+import { verifyToken } from "../middleware/verify-token.middleware";
+
 
 export async function GET(req: NextRequest) {
   try {
