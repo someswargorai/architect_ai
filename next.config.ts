@@ -15,4 +15,53 @@ const nextConfig = {
 
 export default withPWA({
   dest: "public",
+   runtimeCaching: [
+    // ✅ API caching with fallback to cache
+    {
+      urlPattern: /^\/api\/(?!auth).*$/, // exclude auth APIs
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "api-cache",
+        networkTimeoutSeconds: 5,
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 60 * 5, // 5 minutes
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+
+    // ❌ NEVER cache auth
+    {
+      urlPattern: /^\/api\/auth\/.*$/,
+      handler: "NetworkOnly",
+    },
+
+    // ❌ NEVER cache liveblocks auth
+    {
+      urlPattern: /^\/api\/liveblocks-auth$/,
+      handler: "NetworkOnly",
+    },
+
+    // ✅ Pages
+    {
+      urlPattern: ({ request }) => request.mode === "navigate",
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "pages",
+        networkTimeoutSeconds: 5,
+      },
+    },
+
+    // ✅ Static assets
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "static-assets",
+      },
+    },
+  ],
 })(nextConfig);

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "Design scalable system architectures visually using AI. Generate system design diagrams, nodes, and flows instantly with an intelligent canvas.",
 
   applicationName: "Architect AI",
-
+  manifest: "/manifest.json",
   icons: {
     icon: "/og_image.png",
     shortcut: "/og_image.png",
