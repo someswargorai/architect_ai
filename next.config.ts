@@ -17,21 +17,20 @@ export default withPWA({
   dest: "public",
    runtimeCaching: [
     // ✅ API caching with fallback to cache
-    {
-      urlPattern: /^\/api\/(?!auth).*$/, // exclude auth APIs
-      handler: "StaleWhileRevalidate",
-      options: {
-        cacheName: "api-cache",
-        networkTimeoutSeconds: 5,
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 5, // 5 minutes
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
+   {
+  urlPattern: /^\/api\/(?!auth).*$/,
+  handler: "StaleWhileRevalidate",
+  options: {
+    cacheName: "api-cache",
+    expiration: {
+      maxEntries: 100,
+      maxAgeSeconds: 60 * 5,
     },
+    cacheableResponse: {
+      statuses: [0, 200],
+    },
+  },
+},
 
     // ❌ NEVER cache auth
     {
