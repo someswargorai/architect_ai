@@ -46,11 +46,13 @@ export default withPWA({
 
     // ✅ Pages
     {
-      urlPattern: ({ request }) => request.mode === "navigate",
-      handler: "NetworkFirst",
+       urlPattern: ({ request }) => request.mode === "navigate",
+      handler: "CacheFirst",
       options: {
         cacheName: "pages",
-        networkTimeoutSeconds: 5,
+        expiration: {
+          maxEntries: 50,
+        },
       },
     },
 
